@@ -2,6 +2,7 @@ import { pgTable, uuid, text, decimal, timestamp, pgEnum, boolean } from 'drizzl
 
 export const accountTypeEnum = pgEnum('account_type', ['CURRENT', 'SAVINGS', 'CASH'])
 export const transactionTypeEnum = pgEnum('transaction_type', ['INCOME', 'EXPENSE'])
+export const recurrenceFrequencyEnum = pgEnum('recurrence_frequency', ['MONTHLY', 'YEARLY', 'WEEKLY', 'DAILY'])
 
 export const accounts = pgTable('accounts', {
 	id: uuid('id').defaultRandom().primaryKey(),
@@ -40,6 +41,7 @@ export const transactions = pgTable('transactions', {
 	currency: text('currency').notNull().default('USD'), // Matches DEFAULT_CURRENCY in lib/currency.ts
 	source: text('source'), // Optional source of income (e.g., YouTube, Affiliate, etc.)
 	isRecurrent: boolean('is_recurrent').notNull().default(false), // Whether this is a recurring transaction
+	recurrenceFrequency: recurrenceFrequencyEnum('recurrence_frequency'), // Frequency of recurrence (MONTHLY, YEARLY, WEEKLY, DAILY)
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
 })
 

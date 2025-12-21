@@ -43,6 +43,16 @@ const transactionSchema = z.object({
 	currency: z.string().min(1, 'Currency is required'),
 	source: z.string().optional(),
 	isRecurrent: z.boolean(),
+	recurrenceFrequency: z.enum(['MONTHLY', 'YEARLY', 'WEEKLY', 'DAILY']).optional(),
+}).refine((data) => {
+	// If isRecurrent is true, recurrenceFrequency must be provided
+	if (data.isRecurrent && !data.recurrenceFrequency) {
+		return false
+	}
+	return true
+}, {
+	message: 'Recurrence frequency is required for recurring transactions',
+	path: ['recurrenceFrequency'],
 })
 
 type TransactionFormValues = z.infer<typeof transactionSchema>
@@ -67,6 +77,7 @@ interface TransactionFormProps {
 		currency?: string
 		source?: string | null
 		isRecurrent?: boolean
+		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 	}
 }
 
@@ -102,6 +113,7 @@ export function TransactionForm({
 			currency: getDefaultCurrencyValue(),
 			source: initialData?.source || '',
 			isRecurrent: initialData?.isRecurrent ?? false,
+			recurrenceFrequency: initialData?.recurrenceFrequency || undefined,
 		},
 	})
 
@@ -133,6 +145,7 @@ export function TransactionForm({
 					currency: values.currency,
 					source: values.source && values.source.trim() !== '' ? values.source : null,
 					isRecurrent: values.isRecurrent,
+					recurrenceFrequency: values.recurrenceFrequency || null,
 				})
 				: await createTransaction({
 				amount: values.amount,
@@ -144,6 +157,7 @@ export function TransactionForm({
 					currency: values.currency,
 					source: values.source && values.source.trim() !== '' ? values.source : null,
 					isRecurrent: values.isRecurrent,
+					recurrenceFrequency: values.recurrenceFrequency || null,
 			})
 
 			if (result.success) {
@@ -439,6 +453,43 @@ export function TransactionForm({
 						</FormItem>
 					)}
 				/>
+
+				{form.watch('isRecurrent') && (
+					<FormField
+						control={form.control}
+						name="recurrenceFrequency"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel className="text-sm font-medium">Recurrence Frequency</FormLabel>
+								<Select
+									onValueChange={field.onChange}
+									value={field.value}
+								>
+									<FormControl>
+										<SelectTrigger className="h-11">
+											<SelectValue placeholder="Select frequency" />
+										</SelectTrigger>
+									</FormControl>
+									<SelectContent>
+										<SelectItem value="DAILY" className="cursor-pointer">
+											Daily
+										</SelectItem>
+										<SelectItem value="WEEKLY" className="cursor-pointer">
+											Weekly
+										</SelectItem>
+										<SelectItem value="MONTHLY" className="cursor-pointer">
+											Monthly
+										</SelectItem>
+										<SelectItem value="YEARLY" className="cursor-pointer">
+											Yearly
+										</SelectItem>
+									</SelectContent>
+								</Select>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
 
 				{form.formState.errors.root && (
 					<div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">

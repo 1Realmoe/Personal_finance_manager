@@ -19,6 +19,7 @@ export async function getTransactions(limit?: number) {
 			currency: transactions.currency,
 			source: transactions.source,
 			isRecurrent: transactions.isRecurrent,
+			recurrenceFrequency: transactions.recurrenceFrequency,
 		})
 		.from(transactions)
 		.leftJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -52,6 +53,7 @@ export async function getTransactionsByMonth(year: number, month: number) {
 			currency: transactions.currency,
 			source: transactions.source,
 			isRecurrent: transactions.isRecurrent,
+			recurrenceFrequency: transactions.recurrenceFrequency,
 		})
 		.from(transactions)
 		.leftJoin(accounts, eq(transactions.accountId, accounts.id))

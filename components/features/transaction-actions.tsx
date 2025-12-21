@@ -43,6 +43,7 @@ interface TransactionActionsProps {
 		currency?: string
 		source?: string | null
 		isRecurrent?: boolean
+		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 	}
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
@@ -147,6 +148,7 @@ export function TransactionActions({
 							currency: transaction.currency,
 							source: transaction.source || null,
 							isRecurrent: transaction.isRecurrent || false,
+							recurrenceFrequency: transaction.recurrenceFrequency || null,
 						}}
 							onSuccess={() => {
 								setEditOpen(false)

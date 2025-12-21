@@ -17,6 +17,7 @@ export async function createTransaction(formData: {
 	currency: string
 	source?: string | null
 	isRecurrent?: boolean
+	recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 }) {
 	try {
 		// Insert transaction
@@ -32,6 +33,7 @@ export async function createTransaction(formData: {
 				currency: formData.currency,
 				source: formData.source || null,
 				isRecurrent: formData.isRecurrent || false,
+				recurrenceFrequency: formData.recurrenceFrequency || null,
 				userId,
 			})
 			.returning()
@@ -70,6 +72,7 @@ export async function updateTransaction(
 		currency: string
 		source?: string | null
 		isRecurrent?: boolean
+		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 	}
 ) {
 	try {
@@ -107,6 +110,7 @@ export async function updateTransaction(
 				currency: formData.currency,
 				source: formData.source || null,
 				isRecurrent: formData.isRecurrent || false,
+				recurrenceFrequency: formData.recurrenceFrequency || null,
 			})
 			.where(eq(transactions.id, transactionId))
 			.returning()
