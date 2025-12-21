@@ -162,7 +162,7 @@ async function OverviewStatsCards() {
 	const stats = await getOverviewStats()
 
 	return (
-		<div className="grid gap-4 md:grid-cols-3">
+		<div className="grid gap-4 md:grid-cols-2">
 			<Card className="transition-all duration-200 hover:shadow-md">
 				<CardContent className="p-6">
 					<div className="flex items-center justify-between">
@@ -172,19 +172,6 @@ async function OverviewStatsCards() {
 						</div>
 						<div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
 							<Wallet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-			<Card className="transition-all duration-200 hover:shadow-md">
-				<CardContent className="p-6">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm text-muted-foreground mb-1">Categories</p>
-							<p className="text-2xl font-bold">{stats.categories}</p>
-						</div>
-						<div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-							<Tag className="h-6 w-6 text-purple-600 dark:text-purple-400" />
 						</div>
 					</div>
 				</CardContent>
@@ -331,7 +318,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 				<SummaryCards view={view} year={year} month={month} />
 			</Suspense>
 
-			<Suspense fallback={<div className="grid gap-4 md:grid-cols-3"><div className="h-24 bg-muted rounded animate-pulse" /><div className="h-24 bg-muted rounded animate-pulse" /><div className="h-24 bg-muted rounded animate-pulse" /></div>}>
+			<Suspense fallback={<div className="grid gap-4 md:grid-cols-2"><div className="h-24 bg-muted rounded animate-pulse" /><div className="h-24 bg-muted rounded animate-pulse" /></div>}>
 				<OverviewStatsCards />
 			</Suspense>
 
@@ -468,10 +455,13 @@ async function CategoryBreakdownChartWrapper({
 	year: number
 	month: number 
 }) {
-	const categoryData = view === 'year'
-		? await getYearlyTopExpensesByCategory(year)
-		: await getTopExpensesByCategory(year, month)
-	return <CategoryBreakdownChart data={categoryData} />
+	const [categoryData, stats] = await Promise.all([
+		view === 'year'
+			? getYearlyTopExpensesByCategory(year)
+			: getTopExpensesByCategory(year, month),
+		getOverviewStats(),
+	])
+	return <CategoryBreakdownChart data={categoryData} categoriesCount={stats.categories} />
 }
 
 async function FrequentExpensesList({ 

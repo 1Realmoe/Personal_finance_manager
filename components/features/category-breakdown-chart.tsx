@@ -7,6 +7,7 @@ import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
 
 interface CategoryBreakdownChartProps {
 	data: Array<{ categoryName: string; total: number; currency: string }>
+	categoriesCount?: number
 }
 
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#6366F1']
@@ -18,13 +19,23 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
+export function CategoryBreakdownChart({ data, categoriesCount }: CategoryBreakdownChartProps) {
 	if (data.length === 0) {
 		return (
 			<Card className="border-dashed">
 				<CardHeader>
-					<CardTitle>Category Breakdown</CardTitle>
-					<CardDescription>Top spending categories this month</CardDescription>
+					<div className="flex items-center justify-between">
+						<div>
+							<CardTitle>Category Breakdown</CardTitle>
+							<CardDescription>Top spending categories this month</CardDescription>
+						</div>
+						{categoriesCount !== undefined && (
+							<div className="text-right">
+								<p className="text-sm text-muted-foreground">Total Categories</p>
+								<p className="text-2xl font-bold">{categoriesCount}</p>
+							</div>
+						)}
+					</div>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-col h-[300px] items-center justify-center text-center">
@@ -64,8 +75,18 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
 	return (
 		<Card className="transition-shadow duration-200 hover:shadow-lg">
 			<CardHeader>
-				<CardTitle>Category Breakdown</CardTitle>
-				<CardDescription>Top spending categories this month</CardDescription>
+				<div className="flex items-center justify-between">
+					<div>
+						<CardTitle>Category Breakdown</CardTitle>
+						<CardDescription>Top spending categories this month</CardDescription>
+					</div>
+					{categoriesCount !== undefined && (
+						<div className="text-right">
+							<p className="text-sm text-muted-foreground">Total Categories</p>
+							<p className="text-2xl font-bold">{categoriesCount}</p>
+						</div>
+					)}
+				</div>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer config={chartConfig} className="h-[300px] w-full">

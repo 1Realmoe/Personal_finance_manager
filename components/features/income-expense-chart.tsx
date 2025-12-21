@@ -66,15 +66,40 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 								cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }}
 								content={({ active, payload }) => {
 									if (active && payload && payload.length) {
-										const value = payload[0].value as number
+										// Get both income and expense values from the data
+										const incomeValue = data[0].income
+										const expenseValue = data[1].expense
+										
 										return (
 											<div className="rounded-lg border bg-background p-2 shadow-sm">
 												<div className="grid gap-2">
 													<div className="flex items-center justify-between gap-4">
-														<span className="text-sm font-medium">{payload[0].name}</span>
-														<span className="text-sm font-bold">
-															{formatCurrency(value, currency)}
+														<span className="text-sm font-medium text-green-600 dark:text-green-400">
+															Income
 														</span>
+														<span className="text-sm font-bold text-green-600 dark:text-green-400">
+															{formatCurrency(incomeValue, currency)}
+														</span>
+													</div>
+													<div className="flex items-center justify-between gap-4">
+														<span className="text-sm font-medium text-red-600 dark:text-red-400">
+															Expense
+														</span>
+														<span className="text-sm font-bold text-red-600 dark:text-red-400">
+															{formatCurrency(expenseValue, currency)}
+														</span>
+													</div>
+													<div className="border-t pt-2 mt-1">
+														<div className="flex items-center justify-between gap-4">
+															<span className="text-sm font-medium">Net</span>
+															<span className={`text-sm font-bold ${
+																netAmount >= 0
+																	? 'text-green-600 dark:text-green-400'
+																	: 'text-red-600 dark:text-red-400'
+															}`}>
+																{formatCurrency(Math.abs(netAmount), currency)}
+															</span>
+														</div>
 													</div>
 												</div>
 											</div>

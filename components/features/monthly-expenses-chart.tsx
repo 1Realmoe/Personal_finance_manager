@@ -108,6 +108,7 @@ export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
 							dataKey="total"
 							fill="url(#colorGradient)"
 							radius={[6, 6, 0, 0]}
+							barSize={34}
 							className="transition-opacity hover:opacity-90"
 						/>
 						<defs>

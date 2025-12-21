@@ -155,7 +155,7 @@ export async function getTopExpensesByCategory(year: number, month: number) {
 		.select({
 			categoryName: categories.name,
 			total: sum(transactions.amount),
-			currency: transactions.currency,
+			currency: sql<string>`MAX(${transactions.currency})`.as('currency'),
 		})
 		.from(transactions)
 		.leftJoin(categories, eq(transactions.categoryId, categories.id))
@@ -167,7 +167,7 @@ export async function getTopExpensesByCategory(year: number, month: number) {
 				lte(transactions.date, endDate)
 			)
 		)
-		.groupBy(categories.name, transactions.currency)
+		.groupBy(categories.name)
 		.orderBy(desc(sum(transactions.amount)))
 		.limit(5)
 
@@ -350,7 +350,7 @@ export async function getYearlyTopExpensesByCategory(year: number) {
 		.select({
 			categoryName: categories.name,
 			total: sum(transactions.amount),
-			currency: transactions.currency,
+			currency: sql<string>`MAX(${transactions.currency})`.as('currency'),
 		})
 		.from(transactions)
 		.leftJoin(categories, eq(transactions.categoryId, categories.id))
@@ -362,7 +362,7 @@ export async function getYearlyTopExpensesByCategory(year: number) {
 				lte(transactions.date, endDate)
 			)
 		)
-		.groupBy(categories.name, transactions.currency)
+		.groupBy(categories.name)
 		.orderBy(desc(sum(transactions.amount)))
 		.limit(5)
 
