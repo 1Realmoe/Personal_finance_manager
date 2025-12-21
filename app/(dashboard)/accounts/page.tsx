@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAccounts } from '@/lib/data/accounts'
 import { AccountActions } from '@/components/features/account-actions'
-import { formatCurrency } from '@/lib/currency'
+import { AccountBalance, AdditionalCurrencyBalance } from '@/components/features/account-balance'
 import Image from 'next/image'
 
 async function AccountsList() {
@@ -78,19 +78,19 @@ async function AccountsList() {
 						<div className={`relative ${hasCardImage ? 'z-10' : ''}`}>
 							<CardHeader>
 								<div className="flex items-center justify-between">
-									<CardTitle className={`group-hover:text-primary transition-colors flex-1 ${hasCardImage ? 'text-foreground' : ''}`}>
-										{account.name}
-									</CardTitle>
-									<div className="flex items-center gap-2">
+									<div className="flex items-center gap-2 flex-1">
 										<div
-											className="h-4 w-4 rounded-full transition-transform group-hover:scale-125 shadow-sm"
+											className="h-4 w-4 rounded-full transition-transform group-hover:scale-125 shadow-sm flex-shrink-0"
 											style={{ backgroundColor: account.color }}
 										/>
-										<AccountActions account={{
-											...account,
-											cardImage: account.cardImage || undefined,
-										}} />
+										<CardTitle className={`group-hover:text-primary transition-colors ${hasCardImage ? 'text-foreground' : ''}`}>
+											{account.name}
+										</CardTitle>
 									</div>
+									<AccountActions account={{
+										...account,
+										cardImage: account.cardImage || undefined,
+									}} />
 								</div>
 								<CardDescription className={`capitalize ${hasCardImage ? 'text-foreground/70' : ''}`}>
 									{account.type.toLowerCase()}
@@ -98,15 +98,20 @@ async function AccountsList() {
 							</CardHeader>
 							<CardContent>
 								<div className="space-y-2">
-									<div className={`text-2xl font-bold transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}>
-										{formatCurrency(account.balance || '0', account.currency || 'USD')}
-									</div>
+									<AccountBalance
+										balance={account.balance || '0'}
+										currency={account.currency || 'USD'}
+										className={`transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}
+									/>
 									{account.additionalCurrencies && account.additionalCurrencies.length > 0 && (
 										<div className="space-y-1">
 											{account.additionalCurrencies.map((ac: { currency: string; balance: string }) => (
-												<div key={ac.currency} className={`text-sm ${hasCardImage ? 'text-foreground/70' : 'text-muted-foreground'}`}>
-													{formatCurrency(ac.balance || '0', ac.currency)}
-												</div>
+												<AdditionalCurrencyBalance
+													key={ac.currency}
+													balance={ac.balance || '0'}
+													currency={ac.currency}
+													className={hasCardImage ? 'text-foreground/70' : ''}
+												/>
 											))}
 										</div>
 									)}

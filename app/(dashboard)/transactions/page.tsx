@@ -13,14 +13,14 @@ import {
 import { format } from 'date-fns'
 import { AddTransactionSheet } from '@/components/features/add-transaction-sheet'
 import { TransactionActions } from '@/components/features/transaction-actions'
-import { formatCurrency } from '@/lib/currency'
+import { TransactionAmount } from '@/components/features/transaction-amount'
 
 async function TransactionsTable({
 	accounts,
 	categories,
 }: {
 	accounts: Array<{ id: string; name: string; currency?: string }>
-	categories: Array<{ id: string; name: string; type: 'INCOME' | 'EXPENSE' }>
+	categories: Array<{ id: string; name: string }>
 }) {
 	const transactions = await getTransactions()
 
@@ -59,6 +59,7 @@ async function TransactionsTable({
 						<TableHead>Category</TableHead>
 						<TableHead>Account</TableHead>
 						<TableHead>Type</TableHead>
+						<TableHead>Source</TableHead>
 						<TableHead className="text-right">Amount</TableHead>
 						<TableHead className="w-[50px]"></TableHead>
 					</TableRow>
@@ -94,15 +95,15 @@ async function TransactionsTable({
 									{transaction.type}
 								</span>
 							</TableCell>
-							<TableCell
-								className={`text-right font-semibold transition-colors ${
-									transaction.type === 'INCOME'
-										? 'text-green-600 dark:text-green-400'
-										: 'text-red-600 dark:text-red-400'
-								}`}
-							>
-								{transaction.type === 'INCOME' ? '+' : '-'}
-								{formatCurrency(transaction.amount || '0', transaction.currency || 'USD')}
+							<TableCell className="text-muted-foreground">
+								{transaction.source || <span className="text-muted-foreground">—</span>}
+							</TableCell>
+							<TableCell className="text-right">
+								<TransactionAmount
+									amount={transaction.amount || '0'}
+									currency={transaction.currency || 'USD'}
+									type={transaction.type}
+								/>
 							</TableCell>
 							<TableCell>
 								<div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -117,6 +118,8 @@ async function TransactionsTable({
 											categoryId: transaction.categoryId,
 											type: transaction.type,
 											currency: transaction.currency,
+											source: transaction.source || null,
+											isRecurrent: transaction.isRecurrent || false,
 										}}
 										accounts={accounts}
 										categories={categories}

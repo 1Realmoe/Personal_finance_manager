@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Wallet, Receipt, Tag } from 'lucide-react'
+import { LayoutDashboard, Wallet, Receipt, Tag, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BalanceToggle } from '@/components/features/balance-toggle'
 
 const navigation = [
 	{
@@ -26,6 +27,11 @@ const navigation = [
 		href: '/categories',
 		icon: Tag,
 	},
+	{
+		name: 'Goals',
+		href: '/goals',
+		icon: Target,
+	},
 ]
 
 export function Sidebar() {
@@ -36,7 +42,10 @@ export function Sidebar() {
 					FinTrack
 				</h1>
 			</div>
-			<nav className="flex-1 space-y-1 p-4">
+			<div className="border-b p-4 bg-card/80 flex-shrink-0">
+				<BalanceToggle />
+			</div>
+			<nav className="flex-1 space-y-1 p-4 overflow-y-auto">
 				{navigation.map((item) => {
 					const Icon = item.icon
 					return (

@@ -35,7 +35,6 @@ import { useRouter } from 'next/navigation'
 
 const categorySchema = z.object({
 	name: z.string().min(1, 'Name is required'),
-	type: z.enum(['INCOME', 'EXPENSE']),
 	icon: z.string().min(1, 'Icon is required'),
 })
 
@@ -45,7 +44,6 @@ interface CategoryFormProps {
 	initialData?: {
 		id?: string
 		name?: string
-		type?: 'INCOME' | 'EXPENSE'
 		icon?: string
 	}
 	onSuccess?: () => void
@@ -66,7 +64,7 @@ const iconOptions = [
 ]
 
 export function CategoryForm({ initialData, onSuccess }: CategoryFormProps) {
-	const [open, setOpen] = useState(!initialData)
+	const [open, setOpen] = useState(false)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const router = useRouter()
 	const isEdit = !!initialData?.id
@@ -75,7 +73,6 @@ export function CategoryForm({ initialData, onSuccess }: CategoryFormProps) {
 		resolver: zodResolver(categorySchema),
 		defaultValues: {
 			name: initialData?.name || '',
-			type: initialData?.type || 'EXPENSE',
 			icon: initialData?.icon || 'Tag',
 		},
 	})
@@ -120,41 +117,6 @@ export function CategoryForm({ initialData, onSuccess }: CategoryFormProps) {
 										<FormControl>
 											<Input placeholder="e.g., Groceries" className="h-11" {...field} />
 										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="type"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-medium">Type</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											value={field.value}
-										>
-											<FormControl>
-												<SelectTrigger className="h-11">
-													<SelectValue placeholder="Select type" />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												<SelectItem value="INCOME" className="cursor-pointer">
-													<span className="flex items-center gap-2">
-														<span className="h-2 w-2 rounded-full bg-green-500"></span>
-														Income
-													</span>
-												</SelectItem>
-												<SelectItem value="EXPENSE" className="cursor-pointer">
-													<span className="flex items-center gap-2">
-														<span className="h-2 w-2 rounded-full bg-red-500"></span>
-														Expense
-													</span>
-												</SelectItem>
-											</SelectContent>
-										</Select>
 										<FormMessage />
 									</FormItem>
 								)}

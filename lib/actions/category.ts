@@ -9,7 +9,6 @@ const userId = 'user_1'
 
 export async function createCategory(formData: {
 	name: string
-	type: 'INCOME' | 'EXPENSE'
 	icon: string
 }) {
 	try {
@@ -17,7 +16,6 @@ export async function createCategory(formData: {
 			.insert(categories)
 			.values({
 				name: formData.name,
-				type: formData.type,
 				icon: formData.icon,
 				userId,
 			})
@@ -37,7 +35,6 @@ export async function updateCategory(
 	categoryId: string,
 	formData: {
 		name: string
-		type: 'INCOME' | 'EXPENSE'
 		icon: string
 	}
 ) {
@@ -46,7 +43,6 @@ export async function updateCategory(
 			.update(categories)
 			.set({
 				name: formData.name,
-				type: formData.type,
 				icon: formData.icon,
 			})
 			.where(eq(categories.id, categoryId))

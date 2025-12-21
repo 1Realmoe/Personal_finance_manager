@@ -29,72 +29,32 @@ async function CategoriesList() {
 		)
 	}
 
-	const incomeCategories = categories.filter((cat) => cat.type === 'INCOME')
-	const expenseCategories = categories.filter((cat) => cat.type === 'EXPENSE')
-
 	return (
 		<div className="space-y-6">
-			{incomeCategories.length > 0 && (
-				<div>
-					<h2 className="text-lg font-semibold mb-4">Income Categories</h2>
-					<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-						{incomeCategories.map((category) => {
-							const IconComponent =
-								(LucideIcons as any)[category.icon] || LucideIcons.Tag
-							return (
-								<Card
-									key={category.id}
-									className="transition-all duration-200 hover:shadow-md group relative"
-								>
-									<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-										<CategoryActions category={category} />
-									</div>
-									<CardContent className="p-4 flex items-center gap-3">
-										<div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-											<IconComponent className="h-5 w-5 text-green-600 dark:text-green-400" />
-										</div>
-										<div className="flex-1 pr-8">
-											<p className="font-medium">{category.name}</p>
-											<p className="text-xs text-muted-foreground">Income</p>
-										</div>
-									</CardContent>
-								</Card>
-							)
-						})}
-					</div>
-				</div>
-			)}
-
-			{expenseCategories.length > 0 && (
-				<div>
-					<h2 className="text-lg font-semibold mb-4">Expense Categories</h2>
-					<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-						{expenseCategories.map((category) => {
-							const IconComponent =
-								(LucideIcons as any)[category.icon] || LucideIcons.Tag
-							return (
-								<Card
-									key={category.id}
-									className="transition-all duration-200 hover:shadow-md group relative"
-								>
-									<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-										<CategoryActions category={category} />
-									</div>
-									<CardContent className="p-4 flex items-center gap-3">
-										<div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
-											<IconComponent className="h-5 w-5 text-red-600 dark:text-red-400" />
-										</div>
-										<div className="flex-1 pr-8">
-											<p className="font-medium">{category.name}</p>
-											<p className="text-xs text-muted-foreground">Expense</p>
-										</div>
-									</CardContent>
-								</Card>
-							)
-						})}
-					</div>
-				</div>
-			)}
+			<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+				{categories.map((category) => {
+					const IconComponent =
+						(LucideIcons as any)[category.icon] || LucideIcons.Tag
+					return (
+						<Card
+							key={category.id}
+							className="transition-all duration-200 hover:shadow-md group relative"
+						>
+							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+								<CategoryActions category={category} />
+							</div>
+							<CardContent className="p-4 flex items-center gap-3">
+								<div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+									<IconComponent className="h-5 w-5 text-primary" />
+								</div>
+								<div className="flex-1 pr-8">
+									<p className="font-medium">{category.name}</p>
+								</div>
+							</CardContent>
+						</Card>
+					)
+				})}
+			</div>
 		</div>
 	)
 }

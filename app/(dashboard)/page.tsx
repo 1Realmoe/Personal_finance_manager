@@ -10,7 +10,8 @@ import { format } from 'date-fns'
 import { MonthlyExpensesChart } from '@/components/features/monthly-expenses-chart'
 import { getDailyExpensesForMonth } from '@/lib/data/dashboard'
 import { MonthPicker } from '@/components/ui/month-picker'
-import { formatCurrency } from '@/lib/currency'
+import { DashboardBalance } from '@/components/features/dashboard-balance'
+import { TransactionAmount } from '@/components/features/transaction-amount'
 
 interface DashboardPageProps {
 	searchParams: Promise<{ month?: string }>
@@ -55,9 +56,7 @@ async function SummaryCards({ year, month }: { year: number; month: number }) {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="text-2xl font-bold">
-						{formatCurrency(totalBalance, 'USD')}
-					</div>
+					<DashboardBalance amount={totalBalance} currency="USD" />
 				</CardContent>
 			</Card>
 			<Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
@@ -79,9 +78,11 @@ async function SummaryCards({ year, month }: { year: number; month: number }) {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="text-2xl font-bold text-green-600 dark:text-green-400">
-						{formatCurrency(monthlyIncome.toString(), 'USD')}
-					</div>
+					<DashboardBalance 
+						amount={monthlyIncome.toString()} 
+						currency="USD" 
+						className="text-green-600 dark:text-green-400"
+					/>
 				</CardContent>
 			</Card>
 			<Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
@@ -103,9 +104,11 @@ async function SummaryCards({ year, month }: { year: number; month: number }) {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="text-2xl font-bold text-red-600 dark:text-red-400">
-						{formatCurrency(monthlyExpense.toString(), 'USD')}
-					</div>
+					<DashboardBalance 
+						amount={monthlyExpense.toString()} 
+						currency="USD" 
+						className="text-red-600 dark:text-red-400"
+					/>
 				</CardContent>
 			</Card>
 		</div>
@@ -167,16 +170,12 @@ async function RecentTransactionsList() {
 									{transaction.categoryName && ` • ${transaction.categoryName}`}
 								</p>
 							</div>
-							<div
-								className={`text-sm font-semibold transition-colors ${
-									transaction.type === 'INCOME'
-										? 'text-green-600 dark:text-green-400'
-										: 'text-red-600 dark:text-red-400'
-								}`}
-							>
-								{transaction.type === 'INCOME' ? '+' : '-'}
-								{formatCurrency(transaction.amount || '0', transaction.currency || 'USD')}
-							</div>
+							<TransactionAmount
+								amount={transaction.amount || '0'}
+								currency={transaction.currency || 'USD'}
+								type={transaction.type}
+								className="text-sm"
+							/>
 						</div>
 					))}
 				</div>

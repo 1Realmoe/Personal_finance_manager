@@ -41,9 +41,11 @@ interface TransactionActionsProps {
 		categoryId?: string | null
 		type: 'INCOME' | 'EXPENSE'
 		currency?: string
+		source?: string | null
+		isRecurrent?: boolean
 	}
 	accounts: Array<{ id: string; name: string; currency?: string }>
-	categories: Array<{ id: string; name: string; type: 'INCOME' | 'EXPENSE' }>
+	categories: Array<{ id: string; name: string }>
 }
 
 export function TransactionActions({ 
@@ -135,15 +137,17 @@ export function TransactionActions({
 							accounts={accounts}
 							categories={categories}
 							initialData={{
-								id: transaction.id,
-								amount: transaction.amount,
-								description: transaction.description,
-								date: typeof transaction.date === 'string' ? new Date(transaction.date) : transaction.date,
-								accountId: transaction.accountId,
-								categoryId: transaction.categoryId,
-								type: transaction.type,
-								currency: transaction.currency,
-							}}
+							id: transaction.id,
+							amount: transaction.amount,
+							description: transaction.description,
+							date: typeof transaction.date === 'string' ? new Date(transaction.date) : transaction.date,
+							accountId: transaction.accountId,
+							categoryId: transaction.categoryId,
+							type: transaction.type,
+							currency: transaction.currency,
+							source: transaction.source || null,
+							isRecurrent: transaction.isRecurrent || false,
+						}}
 							onSuccess={() => {
 								setEditOpen(false)
 								router.refresh()

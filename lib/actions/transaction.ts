@@ -15,6 +15,8 @@ export async function createTransaction(formData: {
 	categoryId?: string | null
 	type: 'INCOME' | 'EXPENSE'
 	currency: string
+	source?: string | null
+	isRecurrent?: boolean
 }) {
 	try {
 		// Insert transaction
@@ -28,6 +30,8 @@ export async function createTransaction(formData: {
 				categoryId: formData.categoryId || null,
 				type: formData.type,
 				currency: formData.currency,
+				source: formData.source || null,
+				isRecurrent: formData.isRecurrent || false,
 				userId,
 			})
 			.returning()
@@ -64,6 +68,8 @@ export async function updateTransaction(
 		categoryId?: string | null
 		type: 'INCOME' | 'EXPENSE'
 		currency: string
+		source?: string | null
+		isRecurrent?: boolean
 	}
 ) {
 	try {
@@ -99,6 +105,8 @@ export async function updateTransaction(
 				categoryId: formData.categoryId || null,
 				type: formData.type,
 				currency: formData.currency,
+				source: formData.source || null,
+				isRecurrent: formData.isRecurrent || false,
 			})
 			.where(eq(transactions.id, transactionId))
 			.returning()

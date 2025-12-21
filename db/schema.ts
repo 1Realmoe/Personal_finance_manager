@@ -1,7 +1,6 @@
-import { pgTable, uuid, text, decimal, timestamp, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, decimal, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core'
 
 export const accountTypeEnum = pgEnum('account_type', ['CURRENT', 'SAVINGS', 'CASH'])
-export const categoryTypeEnum = pgEnum('category_type', ['INCOME', 'EXPENSE'])
 export const transactionTypeEnum = pgEnum('transaction_type', ['INCOME', 'EXPENSE'])
 
 export const accounts = pgTable('accounts', {
@@ -26,7 +25,6 @@ export const accountCurrencies = pgTable('account_currencies', {
 export const categories = pgTable('categories', {
 	id: uuid('id').defaultRandom().primaryKey(),
 	name: text('name').notNull(),
-	type: categoryTypeEnum('type').notNull(),
 	icon: text('icon').notNull(),
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
 })
@@ -40,6 +38,22 @@ export const transactions = pgTable('transactions', {
 	categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
 	type: transactionTypeEnum('type').notNull(),
 	currency: text('currency').notNull().default('USD'),
+	source: text('source'), // Optional source of income (e.g., YouTube, Affiliate, etc.)
+	isRecurrent: boolean('is_recurrent').notNull().default(false), // Whether this is a recurring transaction
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
+})
+
+export const goals = pgTable('goals', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	title: text('title').notNull(),
+	description: text('description'),
+	targetAmount: decimal('target_amount', { precision: 19, scale: 4 }).notNull(),
+	currentAmount: decimal('current_amount', { precision: 19, scale: 4 }).notNull().default('0'),
+	currency: text('currency').notNull().default('USD'),
+	targetDate: timestamp('target_date'),
+	accountId: uuid('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 

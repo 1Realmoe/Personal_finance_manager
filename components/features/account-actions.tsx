@@ -68,7 +68,7 @@ export function AccountActions({ account }: AccountActionsProps) {
 							Create a new bank account to track your finances
 						</DialogDescription>
 					</DialogHeader>
-					<div className="mt-6">
+					<div>
 						<AccountForm
 							onSubmit={async (values) => createAccount(values)}
 							onSuccess={() => {
@@ -110,13 +110,13 @@ export function AccountActions({ account }: AccountActionsProps) {
 
 			<Dialog open={editOpen} onOpenChange={setEditOpen}>
 				<DialogContent className="sm:max-w-lg">
-					<DialogHeader className="space-y-3 pb-6 border-b">
+					<DialogHeader className="border-b">
 						<DialogTitle className="text-2xl font-semibold">Edit Account</DialogTitle>
 						<DialogDescription className="text-base">
 							Update account details
 						</DialogDescription>
 					</DialogHeader>
-					<div className="mt-6">
+					<div>
 						<AccountForm
 							initialData={{
 								...account,

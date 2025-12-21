@@ -32,7 +32,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { getCurrencySymbol } from '@/lib/currency'
+import { getCurrencySymbol, currencies } from '@/lib/currency'
 
 const transactionSchema = z.object({
 	amount: z.string().min(0.01, 'Amount must be greater than 0'),
@@ -41,6 +41,9 @@ const transactionSchema = z.object({
 	accountId: z.string().min(1, 'Account is required'),
 	categoryId: z.string().optional(),
 	type: z.enum(['INCOME', 'EXPENSE']),
+	currency: z.string().min(1, 'Currency is required'),
+	source: z.string().optional(),
+	isRecurrent: z.boolean(),
 })
 
 type TransactionFormValues = z.infer<typeof transactionSchema>
@@ -52,7 +55,7 @@ interface TransactionFormProps {
 		currency?: string
 		additionalCurrencies?: Array<{ currency: string; balance: string }>
 	}>
-	categories: Array<{ id: string; name: string; type: 'INCOME' | 'EXPENSE' }>
+	categories: Array<{ id: string; name: string }>
 	onSuccess?: () => void
 	initialData?: {
 		id?: string
@@ -63,6 +66,8 @@ interface TransactionFormProps {
 		categoryId?: string | null
 		type?: 'INCOME' | 'EXPENSE'
 		currency?: string
+		source?: string | null
+		isRecurrent?: boolean
 	}
 }
 
@@ -76,6 +81,16 @@ export function TransactionForm({
 	const router = useRouter()
 	const isEdit = !!initialData?.id
 
+	// Determine default currency from initial data or first account
+	const getDefaultCurrency = () => {
+		if (initialData?.currency) return initialData.currency
+		if (initialData?.accountId) {
+			const account = accounts.find((acc) => acc.id === initialData.accountId)
+			return account?.currency || 'USD'
+		}
+		return accounts.length > 0 ? (accounts[0].currency || 'USD') : 'USD'
+	}
+
 	const form = useForm<TransactionFormValues>({
 		resolver: zodResolver(transactionSchema),
 		defaultValues: {
@@ -85,6 +100,9 @@ export function TransactionForm({
 			accountId: initialData?.accountId || '',
 			categoryId: initialData?.categoryId || '',
 			type: initialData?.type || 'EXPENSE',
+			currency: getDefaultCurrency(),
+			source: initialData?.source || '',
+			isRecurrent: initialData?.isRecurrent ?? false,
 		},
 	})
 
@@ -98,18 +116,13 @@ export function TransactionForm({
 				{ currency: selectedAccount.currency || 'USD' },
 				...(selectedAccount.additionalCurrencies || []),
 			]
-		: []
-	const accountCurrency = selectedAccount?.currency || 'USD'
-	const filteredCategories = categories.filter(
-		(cat) => cat.type === transactionType
-	)
+		: currencies.map((c) => ({ currency: c.code }))
+	
+	// Categories are now universal - no filtering by type needed
 
 	async function onSubmit(values: TransactionFormValues) {
 		setIsSubmitting(true)
 		try {
-			const selectedAccount = accounts.find((acc) => acc.id === values.accountId)
-			const currency = initialData?.currency || selectedAccount?.currency || 'USD'
-			
 			const result = isEdit && initialData?.id
 				? await updateTransaction(initialData.id, {
 					amount: values.amount,
@@ -118,7 +131,9 @@ export function TransactionForm({
 					accountId: values.accountId,
 					categoryId: values.categoryId && values.categoryId.trim() !== '' ? values.categoryId : null,
 					type: values.type,
-					currency,
+					currency: values.currency,
+					source: values.source && values.source.trim() !== '' ? values.source : null,
+					isRecurrent: values.isRecurrent,
 				})
 				: await createTransaction({
 				amount: values.amount,
@@ -127,7 +142,9 @@ export function TransactionForm({
 				accountId: values.accountId,
 				categoryId: values.categoryId && values.categoryId.trim() !== '' ? values.categoryId : null,
 				type: values.type,
-					currency,
+					currency: values.currency,
+					source: values.source && values.source.trim() !== '' ? values.source : null,
+					isRecurrent: values.isRecurrent,
 			})
 
 			if (result.success) {
@@ -195,11 +212,6 @@ export function TransactionForm({
 						<FormItem>
 							<FormLabel className="text-sm font-medium">
 								Amount
-								{selectedAccountId && availableCurrencies.length > 0 && (
-									<span className="text-muted-foreground ml-2">
-										({availableCurrencies.map((c) => getCurrencySymbol(c.currency)).join(', ')})
-									</span>
-								)}
 							</FormLabel>
 							<FormControl>
 								<Input
@@ -283,7 +295,14 @@ export function TransactionForm({
 						<FormItem>
 							<FormLabel className="text-sm font-medium">Account</FormLabel>
 							<Select
-								onValueChange={field.onChange}
+								onValueChange={(value) => {
+									field.onChange(value)
+									// Set default currency when account changes (only if currency not already set)
+									const account = accounts.find((acc) => acc.id === value)
+									if (account && !form.getValues('currency')) {
+										form.setValue('currency', account.currency || 'USD')
+									}
+								}}
 								value={field.value}
 							>
 								<FormControl>
@@ -297,6 +316,45 @@ export function TransactionForm({
 											{account.name}
 										</SelectItem>
 									))}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="currency"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="text-sm font-medium">Currency</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={field.value}
+							>
+								<FormControl>
+									<SelectTrigger className="h-11">
+										<SelectValue placeholder="Select currency" />
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									{availableCurrencies.length > 0 ? (
+										availableCurrencies.map((curr) => {
+											const currencyInfo = currencies.find((c) => c.code === curr.currency)
+											return (
+												<SelectItem key={curr.currency} value={curr.currency} className="cursor-pointer">
+													{curr.currency} - {currencyInfo?.name || curr.currency}
+												</SelectItem>
+											)
+										})
+									) : (
+										currencies.map((currency) => (
+											<SelectItem key={currency.code} value={currency.code} className="cursor-pointer">
+												{currency.code} - {currency.name}
+											</SelectItem>
+										))
+									)}
 								</SelectContent>
 							</Select>
 							<FormMessage />
@@ -320,20 +378,65 @@ export function TransactionForm({
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
-									{filteredCategories.length > 0 ? (
-										filteredCategories.map((category) => (
+									{categories.length > 0 ? (
+										categories.map((category) => (
 											<SelectItem key={category.id} value={category.id} className="cursor-pointer">
 												{category.name}
 											</SelectItem>
 										))
 									) : (
 										<div className="px-2 py-1.5 text-sm text-muted-foreground">
-											No categories available for this type
+											No categories available
 										</div>
 									)}
 								</SelectContent>
 							</Select>
 							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				{transactionType === 'INCOME' && (
+					<FormField
+						control={form.control}
+						name="source"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel className="text-sm font-medium">Source (Optional)</FormLabel>
+								<FormControl>
+									<Input
+										placeholder="e.g., YouTube, Affiliate, Freelance"
+										className="h-11"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
+
+				<FormField
+					control={form.control}
+					name="isRecurrent"
+					render={({ field }) => (
+						<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+							<FormControl>
+								<input
+									type="checkbox"
+									checked={field.value}
+									onChange={field.onChange}
+									className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+								/>
+							</FormControl>
+							<div className="space-y-1 leading-none">
+								<FormLabel className="text-sm font-medium cursor-pointer">
+									Recurrent / Frequent Transaction
+								</FormLabel>
+								<p className="text-xs text-muted-foreground">
+									Mark this transaction as recurring (e.g., monthly salary, subscription)
+								</p>
+							</div>
 						</FormItem>
 					)}
 				/>

@@ -15,31 +15,51 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { MoreVertical, Edit, Trash2 } from 'lucide-react'
-import { CategoryForm } from './category-form'
-import { deleteCategory } from '@/lib/actions/category'
+import { GoalForm } from './goal-form'
+import { deleteGoal } from '@/lib/actions/goal'
 import { useRouter } from 'next/navigation'
 
-interface CategoryActionsProps {
-	category: {
+interface GoalActionsProps {
+	goal: {
+		id: string
+		title: string
+		description?: string | null
+		targetAmount: string
+		currentAmount: string
+		currency: string
+		targetDate?: Date | null
+		accountId?: string | null
+	}
+	accounts: Array<{ 
 		id: string
 		name: string
-		icon: string
-	}
+		currency?: string
+	}>
 }
 
-export function CategoryActions({ category }: CategoryActionsProps) {
+export function GoalActions({ goal, accounts }: GoalActionsProps) {
 	const [editOpen, setEditOpen] = useState(false)
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const router = useRouter()
 
 	const handleDelete = async () => {
-		const result = await deleteCategory(category.id)
+		const result = await deleteGoal(goal.id)
 		if (result.success) {
 			setDeleteOpen(false)
 			router.refresh()
 		} else {
-			alert(result.error || 'Failed to delete category')
+			alert(result.error || 'Failed to delete goal')
 		}
 	}
 
@@ -70,49 +90,43 @@ export function CategoryActions({ category }: CategoryActionsProps) {
 			</DropdownMenu>
 
 			<Dialog open={editOpen} onOpenChange={setEditOpen}>
-				<DialogContent className="sm:max-w-lg">
+				<DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
 					<DialogHeader className="space-y-3 pb-6 border-b">
-						<DialogTitle className="text-2xl font-semibold">Edit Category</DialogTitle>
+						<DialogTitle className="text-2xl font-semibold">Edit Goal</DialogTitle>
 						<DialogDescription className="text-base">
-							Update category details
+							Update goal details
 						</DialogDescription>
 					</DialogHeader>
 					<div className="mt-6">
-						<CategoryForm
-							initialData={category}
+						<GoalForm
+							accounts={accounts}
+							initialData={goal}
 							onSuccess={() => setEditOpen(false)}
 						/>
 					</div>
 				</DialogContent>
 			</Dialog>
 
-			<Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-				<DialogContent className="sm:max-w-lg">
-					<DialogHeader className="space-y-3 pb-6 border-b">
-						<DialogTitle className="text-2xl font-semibold">Delete Category</DialogTitle>
-						<DialogDescription className="text-base">
-							Are you sure you want to delete "{category.name}"? This action
-							cannot be undone. Categories with transactions cannot be deleted.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="flex justify-end gap-3 mt-6">
-						<Button 
-							variant="outline" 
-							onClick={() => setDeleteOpen(false)}
-							className="h-10"
-						>
-							Cancel
-						</Button>
-						<Button 
-							variant="destructive" 
+			<AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Goal</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete "{goal.title}"? This action
+							cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel className="h-10">Cancel</AlertDialogCancel>
+						<AlertDialogAction
 							onClick={handleDelete}
-							className="h-10 shadow-sm hover:shadow-md transition-all duration-200"
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10"
 						>
 							Delete
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	)
 }

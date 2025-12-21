@@ -20,11 +20,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { currencies, type CurrencyCode } from '@/lib/currency'
-import { Plus, X, ArrowUp, ArrowDown, Star } from 'lucide-react'
+import { Plus, X, ArrowUp, ArrowDown, Star, Upload, Image as ImageIcon } from 'lucide-react'
 import { useFieldArray } from 'react-hook-form'
+import { uploadCardImage } from '@/lib/actions/upload'
 
 const accountCurrencySchema = z.object({
 	currency: z.string().min(1, 'Currency is required'),
@@ -58,13 +59,6 @@ interface AccountFormProps {
 	onSubmit: (values: AccountFormValues) => Promise<{ success: boolean; error?: string }>
 }
 
-const cardImageOptions = [
-	{ label: 'None (Default)', value: '' },
-	{ label: 'Swedbank', value: '/swedbank.jpg' },
-	{ label: 'Revolut', value: '/revolut.avif' },
-	{ label: 'Revolut Pro', value: '/revolut-pro.png' },
-]
-
 const colorOptions = [
 	{ label: 'Blue', value: '#3B82F6' },
 	{ label: 'Green', value: '#10B981' },
@@ -82,8 +76,39 @@ export function AccountForm({
 	onSubmit: onSubmitAction,
 }: AccountFormProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isUploading, setIsUploading] = useState(false)
+	const [uploadedImagePath, setUploadedImagePath] = useState<string | null>(null)
+	const fileInputRef = useRef<HTMLInputElement>(null)
 	const router = useRouter()
 	const isEdit = !!initialData?.id
+
+	const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0]
+		if (!file) return
+
+		setIsUploading(true)
+		try {
+			const formData = new FormData()
+			formData.append('file', file)
+
+			const result = await uploadCardImage(formData)
+			
+			if (result.success && result.path) {
+				setUploadedImagePath(result.path)
+				form.setValue('cardImage', result.path)
+			} else {
+				form.setError('root', {
+					message: result.error || 'Failed to upload image',
+				})
+			}
+		} catch (error) {
+			form.setError('root', {
+				message: 'Failed to upload image',
+			})
+		} finally {
+			setIsUploading(false)
+		}
+	}
 
 	// Format balance to remove trailing zeros and commas
 	const formatBalanceForInput = (balance: string | undefined): string => {
@@ -111,6 +136,13 @@ export function AccountForm({
 		control: form.control,
 		name: 'currencies',
 	})
+
+	// Set uploaded image path if editing with existing custom image
+	useEffect(() => {
+		if (initialData?.cardImage && initialData.cardImage.startsWith('/uploads/')) {
+			setUploadedImagePath(initialData.cardImage)
+		}
+	}, [initialData?.cardImage])
 
 	// Get all currencies including primary
 	const getAllCurrencies = () => {
@@ -145,7 +177,13 @@ export function AccountForm({
 	async function onSubmit(values: AccountFormValues) {
 		setIsSubmitting(true)
 		try {
-			const result = await onSubmitAction(values)
+			// Use uploaded image if available, otherwise use form value
+			const cardImageValue = uploadedImagePath || values.cardImage || ''
+			const submitValues = {
+				...values,
+				cardImage: cardImageValue,
+			}
+			const result = await onSubmitAction(submitValues)
 
 			if (result.success) {
 				form.reset()
@@ -208,6 +246,40 @@ export function AccountForm({
 					)}
 				/>
 
+				<FormField
+					control={form.control}
+					name="color"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="text-sm font-medium">Color</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={field.value}
+							>
+								<FormControl>
+									<SelectTrigger className="h-11">
+										<SelectValue placeholder="Select color" />
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									{colorOptions.map((color) => (
+										<SelectItem key={color.value} value={color.value} className="cursor-pointer">
+											<div className="flex items-center gap-2">
+												<div
+													className="h-4 w-4 rounded-full border border-border"
+													style={{ backgroundColor: color.value }}
+												/>
+												{color.label}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
 				<div className="space-y-4">
 					<div className="flex items-center justify-between">
 						<label className="text-sm font-medium">Currencies (First one is main)</label>
@@ -263,27 +335,27 @@ export function AccountForm({
 							)}
 						/>
 
-						<FormField
-							control={form.control}
-							name="balance"
-							render={({ field }) => (
+					<FormField
+						control={form.control}
+						name="balance"
+						render={({ field }) => (
 								<FormItem className="flex-1 space-y-2">
 									<FormLabel className="text-sm font-medium">
 										{isEdit ? 'Balance' : 'Initial Balance'}
 									</FormLabel>
-									<FormControl>
-										<Input
-											type="number"
-											step="0.01"
-											placeholder="0.00"
-											className="h-11"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+								<FormControl>
+									<Input
+										type="number"
+										step="0.01"
+										placeholder="0.00"
+										className="h-11"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
 						<div className="flex items-end h-11 pt-6">
 							<div className="h-11 w-11" /> {/* Spacer for alignment */}
@@ -410,61 +482,63 @@ export function AccountForm({
 
 				<FormField
 					control={form.control}
-					name="color"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel className="text-sm font-medium">Color</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								value={field.value}
-							>
-								<FormControl>
-									<SelectTrigger className="h-11">
-										<SelectValue placeholder="Select color" />
-									</SelectTrigger>
-								</FormControl>
-								<SelectContent>
-									{colorOptions.map((color) => (
-										<SelectItem key={color.value} value={color.value} className="cursor-pointer">
-											<div className="flex items-center gap-2">
-												<div
-													className="h-4 w-4 rounded-full border border-border"
-													style={{ backgroundColor: color.value }}
-												/>
-												{color.label}
-											</div>
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-
-				<FormField
-					control={form.control}
 					name="cardImage"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="text-sm font-medium">Card Background Image (Optional)</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								value={field.value || ''}
-							>
-								<FormControl>
-									<SelectTrigger className="h-11">
-										<SelectValue placeholder="Select card image" />
-									</SelectTrigger>
-								</FormControl>
-								<SelectContent>
-									{cardImageOptions.map((option) => (
-										<SelectItem key={option.value} value={option.value} className="cursor-pointer">
-											{option.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<div className="space-y-3">
+								<div className="flex gap-2">
+									<Button
+										type="button"
+										variant="outline"
+										onClick={() => fileInputRef.current?.click()}
+										disabled={isUploading}
+										className="h-11 flex-1"
+									>
+										{isUploading ? (
+											<span className="flex items-center gap-2">
+												<span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+												Uploading...
+											</span>
+										) : (
+											<span className="flex items-center gap-2">
+												<Upload className="h-4 w-4" />
+												Upload Custom Image
+											</span>
+										)}
+									</Button>
+									<input
+										ref={fileInputRef}
+										type="file"
+										accept="image/*"
+										onChange={handleFileUpload}
+										className="hidden"
+									/>
+								</div>
+								
+								{(uploadedImagePath || field.value) && (
+									<div className="relative">
+										<div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50">
+											<ImageIcon className="h-4 w-4 text-muted-foreground" />
+											<span className="text-sm flex-1 truncate">
+												{uploadedImagePath || field.value}
+											</span>
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon"
+												onClick={() => {
+													setUploadedImagePath(null)
+													field.onChange('')
+												}}
+												className="h-6 w-6"
+											>
+												<X className="h-3 w-3" />
+											</Button>
+										</div>
+									</div>
+								)}
+							</div>
 							<FormMessage />
 						</FormItem>
 					)}

@@ -21,7 +21,7 @@ interface AddTransactionDialogProps {
 		currency?: string
 		additionalCurrencies?: Array<{ currency: string; balance: string }>
 	}>
-	categories: Array<{ id: string; name: string; type: 'INCOME' | 'EXPENSE' }>
+	categories: Array<{ id: string; name: string }>
 }
 
 export function AddTransactionSheet({
