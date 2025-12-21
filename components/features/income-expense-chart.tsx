@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
+import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface IncomeExpenseChartProps {
 	income: number
@@ -23,6 +24,8 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENCY }: IncomeExpenseChartProps) {
+	const { isBalanceVisible } = useBalanceVisibility()
+	
 	const data = [
 		{
 			name: 'Income',
@@ -37,6 +40,11 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 	]
 
 	const netAmount = income - expense
+	
+	const formatAmount = (amount: number) => {
+		if (!isBalanceVisible) return '••••••'
+		return formatCurrency(amount, currency)
+	}
 
 	return (
 		<Card className="transition-shadow duration-200 hover:shadow-lg">
@@ -78,7 +86,7 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 															Income
 														</span>
 														<span className="text-sm font-bold text-green-600 dark:text-green-400">
-															{formatCurrency(incomeValue, currency)}
+															{formatAmount(incomeValue)}
 														</span>
 													</div>
 													<div className="flex items-center justify-between gap-4">
@@ -86,7 +94,7 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 															Expense
 														</span>
 														<span className="text-sm font-bold text-red-600 dark:text-red-400">
-															{formatCurrency(expenseValue, currency)}
+															{formatAmount(expenseValue)}
 														</span>
 													</div>
 													<div className="border-t pt-2 mt-1">
@@ -97,7 +105,7 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 																	? 'text-green-600 dark:text-green-400'
 																	: 'text-red-600 dark:text-red-400'
 															}`}>
-																{formatCurrency(Math.abs(netAmount), currency)}
+																{formatAmount(Math.abs(netAmount))}
 															</span>
 														</div>
 													</div>
@@ -132,13 +140,13 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 										: 'text-red-600 dark:text-red-400'
 								}`}
 							>
-								{formatCurrency(Math.abs(netAmount), currency)}
+								{formatAmount(Math.abs(netAmount))}
 							</p>
 						</div>
 						<div className="text-right">
 							<p className="text-sm text-muted-foreground">Savings Rate</p>
 							<p className="text-2xl font-bold">
-								{income > 0 ? ((netAmount / income) * 100).toFixed(1) : '0.0'}%
+								{isBalanceVisible && income > 0 ? ((netAmount / income) * 100).toFixed(1) : '•••'}%
 							</p>
 						</div>
 					</div>

@@ -25,15 +25,16 @@ interface AccountActionsProps {
 	account?: {
 		id: string
 		name: string
-		type: 'CURRENT' | 'SAVINGS' | 'CASH'
+		type: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 		color: string
 		currency?: string
 		additionalCurrencies?: Array<{ currency: string; balance: string }>
 		cardImage?: string | null
 	}
+	defaultAccountType?: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 }
 
-export function AccountActions({ account }: AccountActionsProps) {
+export function AccountActions({ account, defaultAccountType }: AccountActionsProps) {
 	const [editOpen, setEditOpen] = useState(false)
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [addOpen, setAddOpen] = useState(false)
@@ -70,6 +71,7 @@ export function AccountActions({ account }: AccountActionsProps) {
 					</DialogHeader>
 					<div>
 						<AccountForm
+							initialData={defaultAccountType ? { type: defaultAccountType } : undefined}
 							onSubmit={async (values) => createAccount(values)}
 							onSuccess={() => {
 								setAddOpen(false)

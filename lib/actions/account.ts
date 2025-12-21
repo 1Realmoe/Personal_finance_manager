@@ -1,15 +1,14 @@
 'use server'
 
 import { db } from '@/db'
-import { accounts, transactions, accountCurrencies } from '@/db/schema'
-import { eq, sql } from 'drizzle-orm'
+import { accounts, transactions, accountCurrencies, holdings, investmentTransactions } from '@/db/schema'
+import { eq, sql, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-
-const userId = 'user_1'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function createAccount(formData: {
 	name: string
-	type: 'CURRENT' | 'SAVINGS' | 'CASH'
+	type: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 	balance: string
 	color: string
 	currency: string
@@ -17,6 +16,7 @@ export async function createAccount(formData: {
 	cardImage?: string
 }) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [account] = await db
 			.insert(accounts)
 			.values({
@@ -26,7 +26,7 @@ export async function createAccount(formData: {
 				color: formData.color,
 				currency: formData.currency,
 				cardImage: formData.cardImage || null,
-				userId,
+				clerkUserId,
 			})
 			.returning()
 
@@ -37,13 +37,13 @@ export async function createAccount(formData: {
 					accountId: account.id,
 					currency: curr.currency,
 					balance: curr.balance,
-					userId,
+					clerkUserId,
 				}))
 			)
 		}
 
 		revalidatePath('/accounts')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 
 		return { success: true, account }
 	} catch (error) {
@@ -56,7 +56,7 @@ export async function updateAccount(
 	accountId: string,
 	formData: {
 		name: string
-		type: 'CURRENT' | 'SAVINGS' | 'CASH'
+		type: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 		color: string
 		currency: string
 		balance?: string
@@ -65,9 +65,10 @@ export async function updateAccount(
 	}
 ) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const updateData: {
 			name: string
-			type: 'CURRENT' | 'SAVINGS' | 'CASH'
+			type: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 			color: string
 			currency: string
 			balance?: string
@@ -90,8 +91,17 @@ export async function updateAccount(
 		const [account] = await db
 			.update(accounts)
 			.set(updateData)
-			.where(eq(accounts.id, accountId))
+			.where(
+				and(
+					eq(accounts.id, accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 			.returning()
+
+		if (!account) {
+			return { success: false, error: 'Account not found' }
+		}
 
 		// Update additional currencies
 		if (formData.currencies !== undefined) {
@@ -105,14 +115,14 @@ export async function updateAccount(
 						accountId: account.id,
 						currency: curr.currency,
 						balance: curr.balance,
-						userId,
+						clerkUserId,
 					}))
 				)
 			}
 		}
 
 		revalidatePath('/accounts')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
 
 		return { success: true, account }
@@ -124,7 +134,25 @@ export async function updateAccount(
 
 export async function deleteAccount(accountId: string) {
 	try {
-		// Check if account has transactions
+		const clerkUserId = await getCurrentUserId()
+		
+		// Verify account belongs to user
+		const [account] = await db
+			.select()
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.id, accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
+			.limit(1)
+
+		if (!account) {
+			return { success: false, error: 'Account not found' }
+		}
+
+		// Check if account has transactions (regular or investment)
 		const accountTransactions = await db
 			.select()
 			.from(transactions)
@@ -138,11 +166,50 @@ export async function deleteAccount(accountId: string) {
 			}
 		}
 
-		await db.delete(accounts).where(eq(accounts.id, accountId))
+		// For investment accounts, also check for holdings and investment transactions
+		if (account.type === 'INVESTMENT') {
+			const { holdings, investmentTransactions } = await import('@/db/schema')
+			
+			const accountHoldings = await db
+				.select()
+				.from(holdings)
+				.where(eq(holdings.accountId, accountId))
+				.limit(1)
+
+			if (accountHoldings.length > 0) {
+				return {
+					success: false,
+					error: 'Cannot delete investment account with existing holdings',
+				}
+			}
+
+			const accountInvestmentTransactions = await db
+				.select()
+				.from(investmentTransactions)
+				.where(eq(investmentTransactions.accountId, accountId))
+				.limit(1)
+
+			if (accountInvestmentTransactions.length > 0) {
+				return {
+					success: false,
+					error: 'Cannot delete investment account with existing investment transactions',
+				}
+			}
+		}
+
+		await db
+			.delete(accounts)
+			.where(
+				and(
+					eq(accounts.id, accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 
 		revalidatePath('/accounts')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
+		revalidatePath('/dashboard/investments')
 
 		return { success: true }
 	} catch (error) {

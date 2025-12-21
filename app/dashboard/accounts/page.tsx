@@ -1,15 +1,32 @@
 import { Suspense } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAccounts } from '@/lib/data/accounts'
+import { getPortfolioValue } from '@/lib/data/investments'
 import { AccountActions } from '@/components/features/account-actions'
 import { AccountBalance, AdditionalCurrencyBalance } from '@/components/features/account-balance'
 import { DEFAULT_CURRENCY } from '@/lib/format'
+import { getUserBaseCurrency } from '@/lib/actions/user'
 import Image from 'next/image'
+import { PortfolioValueDisplay } from '@/components/features/portfolio-value-display'
 
 async function AccountsList() {
 	const accounts = await getAccounts()
+	
+	// Calculate portfolio values for investment accounts
+	const accountsWithValues = await Promise.all(
+		accounts.map(async (account) => {
+			if (account.type === 'INVESTMENT') {
+				const portfolioValue = await getPortfolioValue(account.id)
+				return {
+					...account,
+					portfolioValue,
+				}
+			}
+			return account
+		})
+	)
 
-	if (accounts.length === 0) {
+	if (accountsWithValues.length === 0) {
 		return (
 			<Card className="border-dashed">
 				<CardHeader>
@@ -40,10 +57,15 @@ async function AccountsList() {
 		)
 	}
 
+	const baseCurrency = await getUserBaseCurrency()
+
 	return (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{accounts.map((account, index) => {
+			{accountsWithValues.map((account, index) => {
 				const hasCardImage = account.cardImage && account.cardImage.trim() !== ''
+				const isInvestmentAccount = account.type === 'INVESTMENT'
+				const portfolioValue = 'portfolioValue' in account ? account.portfolioValue : undefined
+				
 				return (
 					<Card
 						key={account.id}
@@ -99,22 +121,35 @@ async function AccountsList() {
 							</CardHeader>
 							<CardContent>
 								<div className="space-y-2">
-									<AccountBalance
-										balance={account.balance || '0'}
-										currency={account.currency || DEFAULT_CURRENCY}
-										className={`transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}
-									/>
-									{account.additionalCurrencies && account.additionalCurrencies.length > 0 && (
-										<div className="space-y-1">
-											{account.additionalCurrencies.map((ac: { currency: string; balance: string }) => (
-												<AdditionalCurrencyBalance
-													key={ac.currency}
-													balance={ac.balance || '0'}
-													currency={ac.currency}
-													className={hasCardImage ? 'text-foreground/70' : ''}
-												/>
-											))}
+									{isInvestmentAccount && portfolioValue !== undefined ? (
+										<div className={`transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}>
+											<div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
+											<PortfolioValueDisplay
+												value={portfolioValue}
+												currency={baseCurrency}
+												className="text-2xl"
+											/>
 										</div>
+									) : (
+										<>
+											<AccountBalance
+												balance={account.balance || '0'}
+												currency={account.currency || DEFAULT_CURRENCY}
+												className={`transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}
+											/>
+											{account.additionalCurrencies && account.additionalCurrencies.length > 0 && (
+												<div className="space-y-1">
+													{account.additionalCurrencies.map((ac: { currency: string; balance: string }) => (
+														<AdditionalCurrencyBalance
+															key={ac.currency}
+															balance={ac.balance || '0'}
+															currency={ac.currency}
+															className={hasCardImage ? 'text-foreground/70' : ''}
+														/>
+													))}
+												</div>
+											)}
+										</>
 									)}
 								</div>
 							</CardContent>

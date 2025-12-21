@@ -2,10 +2,9 @@
 
 import { db } from '@/db'
 import { transactions, accounts } from '@/db/schema'
-import { eq, sql } from 'drizzle-orm'
+import { eq, sql, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-
-const userId = 'user_1'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function createTransaction(formData: {
 	amount: string
@@ -20,6 +19,24 @@ export async function createTransaction(formData: {
 	recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 }) {
 	try {
+		const clerkUserId = await getCurrentUserId()
+		
+		// Verify account belongs to user
+		const [account] = await db
+			.select()
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.id, formData.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
+			.limit(1)
+
+		if (!account) {
+			return { success: false, error: 'Account not found' }
+		}
+
 		// Insert transaction
 		const [transaction] = await db
 			.insert(transactions)
@@ -34,7 +51,7 @@ export async function createTransaction(formData: {
 				source: formData.source || null,
 				isRecurrent: formData.isRecurrent || false,
 				recurrenceFrequency: formData.recurrenceFrequency || null,
-				userId,
+				clerkUserId,
 			})
 			.returning()
 
@@ -47,9 +64,14 @@ export async function createTransaction(formData: {
 			.set({
 				balance: sql`${accounts.balance} + ${balanceChange}`,
 			})
-			.where(eq(accounts.id, formData.accountId))
+			.where(
+				and(
+					eq(accounts.id, formData.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
 		revalidatePath('/accounts')
 
@@ -76,11 +98,18 @@ export async function updateTransaction(
 	}
 ) {
 	try {
+		const clerkUserId = await getCurrentUserId()
+		
 		// Get old transaction details to revert balance changes
 		const [oldTransaction] = await db
 			.select()
 			.from(transactions)
-			.where(eq(transactions.id, transactionId))
+			.where(
+				and(
+					eq(transactions.id, transactionId),
+					eq(transactions.clerkUserId, clerkUserId)
+				)
+			)
 
 		if (!oldTransaction) {
 			return { success: false, error: 'Transaction not found' }
@@ -95,7 +124,12 @@ export async function updateTransaction(
 			.set({
 				balance: sql`${accounts.balance} + ${oldBalanceChange}`,
 			})
-			.where(eq(accounts.id, oldTransaction.accountId))
+			.where(
+				and(
+					eq(accounts.id, oldTransaction.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 
 		// Update transaction
 		const [transaction] = await db
@@ -112,26 +146,52 @@ export async function updateTransaction(
 				isRecurrent: formData.isRecurrent || false,
 				recurrenceFrequency: formData.recurrenceFrequency || null,
 			})
-			.where(eq(transactions.id, transactionId))
+			.where(
+				and(
+					eq(transactions.id, transactionId),
+					eq(transactions.clerkUserId, clerkUserId)
+				)
+			)
 			.returning()
 
 		// Apply new transaction's effect on account balance
 		const newAmount = parseFloat(formData.amount)
 		const newBalanceChange = formData.type === 'INCOME' ? newAmount : -newAmount
 
+		// Verify new account belongs to user
+		const [newAccount] = await db
+			.select()
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.id, formData.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
+			.limit(1)
+
+		if (!newAccount) {
+			return { success: false, error: 'Account not found' }
+		}
+
 		await db
 			.update(accounts)
 			.set({
 				balance: sql`${accounts.balance} + ${newBalanceChange}`,
 			})
-			.where(eq(accounts.id, formData.accountId))
+			.where(
+				and(
+					eq(accounts.id, formData.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 
 		// If account changed, also update the old account balance
 		if (oldTransaction.accountId !== formData.accountId) {
 			// Old account balance was already reverted above, no need to do anything
 		}
 
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
 		revalidatePath('/accounts')
 
@@ -144,18 +204,32 @@ export async function updateTransaction(
 
 export async function deleteTransaction(transactionId: string) {
 	try {
+		const clerkUserId = await getCurrentUserId()
+		
 		// Get transaction details first to update account balance
 		const [transaction] = await db
 			.select()
 			.from(transactions)
-			.where(eq(transactions.id, transactionId))
+			.where(
+				and(
+					eq(transactions.id, transactionId),
+					eq(transactions.clerkUserId, clerkUserId)
+				)
+			)
 
 		if (!transaction) {
 			return { success: false, error: 'Transaction not found' }
 		}
 
 		// Delete transaction
-		await db.delete(transactions).where(eq(transactions.id, transactionId))
+		await db
+			.delete(transactions)
+			.where(
+				and(
+					eq(transactions.id, transactionId),
+					eq(transactions.clerkUserId, clerkUserId)
+				)
+			)
 
 		// Revert account balance
 		const amount = parseFloat(transaction.amount)
@@ -166,9 +240,14 @@ export async function deleteTransaction(transactionId: string) {
 			.set({
 				balance: sql`${accounts.balance} + ${balanceChange}`,
 			})
-			.where(eq(accounts.id, transaction.accountId))
+			.where(
+				and(
+					eq(accounts.id, transaction.accountId),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
 
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
 		revalidatePath('/accounts')
 

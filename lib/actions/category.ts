@@ -2,22 +2,22 @@
 
 import { db } from '@/db'
 import { categories, transactions } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-
-const userId = 'user_1'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function createCategory(formData: {
 	name: string
 	icon: string
 }) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [category] = await db
 			.insert(categories)
 			.values({
 				name: formData.name,
 				icon: formData.icon,
-				userId,
+				clerkUserId,
 			})
 			.returning()
 
@@ -39,14 +39,24 @@ export async function updateCategory(
 	}
 ) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [category] = await db
 			.update(categories)
 			.set({
 				name: formData.name,
 				icon: formData.icon,
 			})
-			.where(eq(categories.id, categoryId))
+			.where(
+				and(
+					eq(categories.id, categoryId),
+					eq(categories.clerkUserId, clerkUserId)
+				)
+			)
 			.returning()
+
+		if (!category) {
+			return { success: false, error: 'Category not found' }
+		}
 
 		revalidatePath('/categories')
 		revalidatePath('/transactions')
@@ -60,6 +70,24 @@ export async function updateCategory(
 
 export async function deleteCategory(categoryId: string) {
 	try {
+		const clerkUserId = await getCurrentUserId()
+		
+		// Verify category belongs to user
+		const [category] = await db
+			.select()
+			.from(categories)
+			.where(
+				and(
+					eq(categories.id, categoryId),
+					eq(categories.clerkUserId, clerkUserId)
+				)
+			)
+			.limit(1)
+
+		if (!category) {
+			return { success: false, error: 'Category not found' }
+		}
+
 		// Check if category has transactions
 		const categoryTransactions = await db
 			.select()
@@ -74,7 +102,14 @@ export async function deleteCategory(categoryId: string) {
 			}
 		}
 
-		await db.delete(categories).where(eq(categories.id, categoryId))
+		await db
+			.delete(categories)
+			.where(
+				and(
+					eq(categories.id, categoryId),
+					eq(categories.clerkUserId, clerkUserId)
+				)
+			)
 
 		revalidatePath('/categories')
 		revalidatePath('/transactions')

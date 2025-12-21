@@ -26,8 +26,10 @@ import { IncomeExpenseChart } from '@/components/features/income-expense-chart'
 import { PeriodPicker } from '@/components/ui/period-picker'
 import { DashboardBalance } from '@/components/features/dashboard-balance'
 import { TransactionAmount } from '@/components/features/transaction-amount'
+import { SavingsRateDisplay } from '@/components/features/savings-rate-display'
 import { Wallet, Tag, Target, Receipt, TrendingUp, TrendingDown, Repeat, Zap } from 'lucide-react'
 import { formatCurrency, formatDateShort, formatDateCompact, DEFAULT_CURRENCY } from '@/lib/format'
+import { getUserBaseCurrency } from '@/lib/actions/user'
 
 interface DashboardPageProps {
 	searchParams: Promise<{ month?: string; year?: string; view?: string }>
@@ -70,6 +72,7 @@ async function SummaryCards({
 	year: number
 	month: number 
 }) {
+	const baseCurrency = await getUserBaseCurrency()
 	const [totalBalance, income, expense, incomeVsExpense] = await Promise.all([
 		getTotalBalance(),
 		view === 'year' 
@@ -98,7 +101,7 @@ async function SummaryCards({
 					</div>
 				</CardHeader>
 				<CardContent className="relative z-0">
-					<DashboardBalance amount={totalBalance} currency={DEFAULT_CURRENCY} />
+					<DashboardBalance amount={totalBalance} currency={baseCurrency} />
 				</CardContent>
 			</Card>
 			<Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02] relative overflow-hidden border-l-4 border-l-green-500">
@@ -112,7 +115,7 @@ async function SummaryCards({
 				<CardContent className="relative z-0">
 					<DashboardBalance 
 						amount={income.toString()} 
-						currency={DEFAULT_CURRENCY} 
+						currency={baseCurrency} 
 						className="text-green-600 dark:text-green-400"
 					/>
 				</CardContent>
@@ -128,7 +131,7 @@ async function SummaryCards({
 				<CardContent className="relative z-0">
 					<DashboardBalance 
 						amount={expense.toString()} 
-						currency={DEFAULT_CURRENCY} 
+						currency={baseCurrency} 
 						className="text-red-600 dark:text-red-400"
 					/>
 				</CardContent>
@@ -145,12 +148,10 @@ async function SummaryCards({
 					<div className="space-y-1">
 						<DashboardBalance 
 							amount={netAmount.toFixed(2)} 
-							currency={DEFAULT_CURRENCY} 
+							currency={baseCurrency} 
 							className={netAmount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
 						/>
-						<p className="text-xs text-muted-foreground">
-							{savingsRate.toFixed(1)}% savings rate
-						</p>
+						<SavingsRateDisplay rate={savingsRate} />
 					</div>
 				</CardContent>
 			</Card>
@@ -440,10 +441,11 @@ async function IncomeExpenseChartWrapper({
 	year: number
 	month: number 
 }) {
+	const baseCurrency = await getUserBaseCurrency()
 	const { income, expense } = view === 'year'
 		? await getYearlyIncomeVsExpense(year)
 		: await getIncomeVsExpense(year, month)
-	return <IncomeExpenseChart income={income} expense={expense} currency={DEFAULT_CURRENCY} />
+	return <IncomeExpenseChart income={income} expense={expense} currency={baseCurrency} />
 }
 
 async function CategoryBreakdownChartWrapper({ 
@@ -455,13 +457,14 @@ async function CategoryBreakdownChartWrapper({
 	year: number
 	month: number 
 }) {
+	const baseCurrency = await getUserBaseCurrency()
 	const [categoryData, stats] = await Promise.all([
 		view === 'year'
 			? getYearlyTopExpensesByCategory(year)
 			: getTopExpensesByCategory(year, month),
 		getOverviewStats(),
 	])
-	return <CategoryBreakdownChart data={categoryData} categoriesCount={stats.categories} />
+	return <CategoryBreakdownChart data={categoryData} categoriesCount={stats.categories} displayCurrency={baseCurrency} />
 }
 
 async function FrequentExpensesList({ 
@@ -530,9 +533,12 @@ async function FrequentExpensesList({
 								</div>
 							</div>
 							<div className="text-right">
-								<p className="text-sm font-semibold text-red-600 dark:text-red-400">
-									{formatCurrency(expense.amount, expense.currency)}
-								</p>
+								<TransactionAmount
+									amount={expense.amount.toString()}
+									currency={expense.currency}
+									type="EXPENSE"
+									className="text-sm"
+								/>
 							</div>
 						</div>
 					))}
@@ -614,9 +620,12 @@ async function SingleExpensesList({
 								</div>
 							</div>
 							<div className="text-right">
-								<p className="text-sm font-semibold text-red-600 dark:text-red-400">
-									{formatCurrency(expense.amount, expense.currency)}
-								</p>
+								<TransactionAmount
+									amount={expense.amount.toString()}
+									currency={expense.currency}
+									type="EXPENSE"
+									className="text-sm"
+								/>
 							</div>
 						</div>
 					))}
@@ -635,11 +644,12 @@ async function ExpensesChartWrapper({
 	year: number
 	month: number
 }) {
+	const baseCurrency = await getUserBaseCurrency()
 	if (view === 'year') {
 		const monthlyExpenses = await getMonthlyExpensesForYear(year)
-		return <YearlyExpensesChart data={monthlyExpenses} />
+		return <YearlyExpensesChart data={monthlyExpenses} currency={baseCurrency} />
 	} else {
 		const dailyExpenses = await getDailyExpensesForMonth(year, month)
-		return <MonthlyExpensesChart data={dailyExpenses} />
+		return <MonthlyExpensesChart data={dailyExpenses} currency={baseCurrency} />
 	}
 }

@@ -2,10 +2,9 @@
 
 import { db } from '@/db'
 import { goals } from '@/db/schema'
-import { eq, sql } from 'drizzle-orm'
+import { eq, sql, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-
-const userId = 'user_1'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function createGoal(formData: {
 	title: string
@@ -19,6 +18,7 @@ export async function createGoal(formData: {
 	color?: string
 }) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [goal] = await db
 			.insert(goals)
 			.values({
@@ -31,12 +31,12 @@ export async function createGoal(formData: {
 				accountId: formData.accountId || null,
 				icon: formData.icon || 'Target',
 				color: formData.color || '#8B5CF6',
-				userId,
+				clerkUserId,
 			})
 			.returning()
 
 		revalidatePath('/goals')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 
 		return { success: true, goal }
 	} catch (error) {
@@ -60,6 +60,7 @@ export async function updateGoal(
 	}
 ) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [goal] = await db
 			.update(goals)
 			.set({
@@ -74,7 +75,12 @@ export async function updateGoal(
 				color: formData.color || '#8B5CF6',
 				updatedAt: sql`NOW()`,
 			})
-			.where(eq(goals.id, goalId))
+			.where(
+				and(
+					eq(goals.id, goalId),
+					eq(goals.clerkUserId, clerkUserId)
+				)
+			)
 			.returning()
 
 		if (!goal) {
@@ -82,7 +88,7 @@ export async function updateGoal(
 		}
 
 		revalidatePath('/goals')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 
 		return { success: true, goal }
 	} catch (error) {
@@ -93,10 +99,18 @@ export async function updateGoal(
 
 export async function deleteGoal(goalId: string) {
 	try {
-		await db.delete(goals).where(eq(goals.id, goalId))
+		const clerkUserId = await getCurrentUserId()
+		await db
+			.delete(goals)
+			.where(
+				and(
+					eq(goals.id, goalId),
+					eq(goals.clerkUserId, clerkUserId)
+				)
+			)
 
 		revalidatePath('/goals')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 
 		return { success: true }
 	} catch (error) {
@@ -107,13 +121,19 @@ export async function deleteGoal(goalId: string) {
 
 export async function updateGoalProgress(goalId: string, currentAmount: string) {
 	try {
+		const clerkUserId = await getCurrentUserId()
 		const [goal] = await db
 			.update(goals)
 			.set({
 				currentAmount,
 				updatedAt: sql`NOW()`,
 			})
-			.where(eq(goals.id, goalId))
+			.where(
+				and(
+					eq(goals.id, goalId),
+					eq(goals.clerkUserId, clerkUserId)
+				)
+			)
 			.returning()
 
 		if (!goal) {
@@ -121,7 +141,7 @@ export async function updateGoalProgress(goalId: string, currentAmount: string) 
 		}
 
 		revalidatePath('/goals')
-		revalidatePath('/')
+		revalidatePath('/dashboard')
 
 		return { success: true, goal }
 	} catch (error) {

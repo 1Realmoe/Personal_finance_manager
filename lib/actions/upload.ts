@@ -3,9 +3,13 @@
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
 import { revalidatePath } from 'next/cache'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function uploadCardImage(formData: FormData): Promise<{ success: boolean; path?: string; error?: string }> {
 	try {
+		// Verify user is authenticated
+		await getCurrentUserId()
+		
 		const file = formData.get('file') as File | null
 		
 		if (!file) {

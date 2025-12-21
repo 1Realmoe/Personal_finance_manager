@@ -64,6 +64,13 @@
       "when": 1766328029193,
       "tag": "0008_public_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1766330576723,
+      "tag": "0009_regular_random",
+      "breakpoints": true
     }
   ]
 }

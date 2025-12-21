@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
 	Table,
 	TableBody,
@@ -13,6 +13,7 @@ import { formatDateShort, DEFAULT_CURRENCY } from '@/lib/format'
 import { TransactionActions } from '@/components/features/transaction-actions'
 import { TransactionAmount } from '@/components/features/transaction-amount'
 import { TransactionDetails } from '@/components/features/transaction-details'
+import { TransactionFilters } from '@/components/features/transactions-search-filters'
 
 interface TransactionsTableClientProps {
 	transactions: Array<{
@@ -32,11 +33,73 @@ interface TransactionsTableClientProps {
 	}>
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
+	filters: TransactionFilters
 }
 
-export function TransactionsTableClient({ transactions, accounts, categories }: TransactionsTableClientProps) {
+export function TransactionsTableClient({ transactions, accounts, categories, filters }: TransactionsTableClientProps) {
 	const [selectedTransaction, setSelectedTransaction] = useState<typeof transactions[0] | null>(null)
 	const [detailsOpen, setDetailsOpen] = useState(false)
+
+	// Filter transactions based on filters
+	const filteredTransactions = useMemo(() => {
+		return transactions.filter((transaction) => {
+			// Search query filter
+			if (filters.searchQuery) {
+				const query = filters.searchQuery.toLowerCase()
+				const matchesDescription = transaction.description.toLowerCase().includes(query)
+				const matchesCategory = transaction.categoryName?.toLowerCase().includes(query) || false
+				const matchesAccount = transaction.accountName?.toLowerCase().includes(query) || false
+				
+				if (!matchesDescription && !matchesCategory && !matchesAccount) {
+					return false
+				}
+			}
+
+			// Date range filter
+			if (filters.dateFrom) {
+				const transactionDate = new Date(transaction.date)
+				if (transactionDate < filters.dateFrom) {
+					return false
+				}
+			}
+			if (filters.dateTo) {
+				const transactionDate = new Date(transaction.date)
+				const endDate = new Date(filters.dateTo)
+				endDate.setHours(23, 59, 59, 999)
+				if (transactionDate > endDate) {
+					return false
+				}
+			}
+
+			// Account filter
+			if (filters.accountIds.length > 0 && !filters.accountIds.includes(transaction.accountId)) {
+				return false
+			}
+
+			// Category filter
+			if (filters.categoryIds.length > 0) {
+				if (!transaction.categoryId || !filters.categoryIds.includes(transaction.categoryId)) {
+					return false
+				}
+			}
+
+			// Type filter
+			if (filters.type !== 'ALL' && transaction.type !== filters.type) {
+				return false
+			}
+
+			// Amount range filter
+			const amount = parseFloat(transaction.amount || '0')
+			if (filters.amountMin && amount < parseFloat(filters.amountMin)) {
+				return false
+			}
+			if (filters.amountMax && amount > parseFloat(filters.amountMax)) {
+				return false
+			}
+
+			return true
+		})
+	}, [transactions, filters])
 
 	const handleRowClick = (transaction: typeof transactions[0]) => {
 		setSelectedTransaction(transaction)
@@ -85,7 +148,34 @@ export function TransactionsTableClient({ transactions, accounts, categories }: 
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{transactions.map((transaction) => (
+						{filteredTransactions.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={9} className="text-center py-12">
+									<div className="flex flex-col items-center justify-center">
+										<div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="h-6 w-6 text-muted-foreground"
+											>
+												<circle cx="11" cy="11" r="8" />
+												<path d="m21 21-4.35-4.35" />
+											</svg>
+										</div>
+										<h3 className="text-lg font-semibold mb-2">No transactions found</h3>
+										<p className="text-sm text-muted-foreground">
+											Try adjusting your filters to see more results
+										</p>
+									</div>
+								</TableCell>
+							</TableRow>
+						) : (
+							filteredTransactions.map((transaction) => (
 							<TableRow
 								key={transaction.id}
 								onClick={() => handleRowClick(transaction)}
@@ -149,7 +239,8 @@ export function TransactionsTableClient({ transactions, accounts, categories }: 
 									</div>
 								</TableCell>
 							</TableRow>
-						))}
+							))
+						)}
 					</TableBody>
 				</Table>
 			</div>

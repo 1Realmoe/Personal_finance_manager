@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart'
 import { Pie, PieChart, Cell } from 'recharts'
 import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
+import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface CategoryBreakdownChartProps {
 	data: Array<{ categoryName: string; total: number; currency: string }>
 	categoriesCount?: number
+	displayCurrency?: string
 }
 
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#6366F1']
@@ -19,7 +21,9 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function CategoryBreakdownChart({ data, categoriesCount }: CategoryBreakdownChartProps) {
+export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency }: CategoryBreakdownChartProps) {
+	const { isBalanceVisible } = useBalanceVisibility()
+	
 	if (data.length === 0) {
 		return (
 			<Card className="border-dashed">
@@ -70,7 +74,12 @@ export function CategoryBreakdownChart({ data, categoriesCount }: CategoryBreakd
 		color: COLORS[index % COLORS.length],
 	}))
 
-	const currency = data[0]?.currency || DEFAULT_CURRENCY
+	const currency = displayCurrency || data[0]?.currency || DEFAULT_CURRENCY
+	
+	const formatAmount = (amount: number) => {
+		if (!isBalanceVisible) return '••••••'
+		return formatCurrency(amount, currency)
+	}
 
 	return (
 		<Card className="transition-shadow duration-200 hover:shadow-lg">
@@ -80,12 +89,6 @@ export function CategoryBreakdownChart({ data, categoriesCount }: CategoryBreakd
 						<CardTitle>Category Breakdown</CardTitle>
 						<CardDescription>Top spending categories this month</CardDescription>
 					</div>
-					{categoriesCount !== undefined && (
-						<div className="text-right">
-							<p className="text-sm text-muted-foreground">Total Categories</p>
-							<p className="text-2xl font-bold">{categoriesCount}</p>
-						</div>
-					)}
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -115,7 +118,7 @@ export function CategoryBreakdownChart({ data, categoriesCount }: CategoryBreakd
 												<div className="flex items-center justify-between gap-4">
 													<span className="text-sm font-medium">{payload[0].name}</span>
 													<span className="text-sm font-bold">
-														{formatCurrency(payload[0].value as number, currency)}
+														{formatAmount(payload[0].value as number)}
 													</span>
 												</div>
 											</div>

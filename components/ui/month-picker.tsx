@@ -33,7 +33,7 @@ export function MonthPicker() {
 
 		const params = new URLSearchParams(searchParams.toString())
 		params.set('month', monthString)
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 		setOpen(false)
 	}
 

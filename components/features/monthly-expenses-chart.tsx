@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { formatCurrency, formatDateForChart, DEFAULT_CURRENCY } from '@/lib/format'
+import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface MonthlyExpensesChartProps {
 	data: Array<{ date: string; total: number }>
+	currency?: string
 }
 
 const chartConfig = {
@@ -16,12 +18,19 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
+export function MonthlyExpensesChart({ data, currency = DEFAULT_CURRENCY }: MonthlyExpensesChartProps) {
+	const { isBalanceVisible } = useBalanceVisibility()
+	
 	// Format data for the chart - ensure all days of the month are represented
 	const chartData = data.map((item) => ({
 		date: formatDateForChart(item.date),
 		total: item.total,
 	}))
+	
+	const formatAmount = (amount: number) => {
+		if (!isBalanceVisible) return '••••••'
+		return formatCurrency(amount, currency)
+	}
 
 	if (chartData.length === 0) {
 		return (
@@ -95,7 +104,7 @@ export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
 													{payload[0].payload.date}
 												</p>
 												<p className="text-sm font-bold text-red-600 dark:text-red-400">
-													{formatCurrency(payload[0].value as number, DEFAULT_CURRENCY)}
+													{formatAmount(payload[0].value as number)}
 												</p>
 											</div>
 										</div>

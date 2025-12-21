@@ -67,7 +67,7 @@ export function PeriodPicker() {
 			}
 		}
 		
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 	}
 
 	const handleMonthChange = (date: Date | undefined) => {
@@ -81,7 +81,7 @@ export function PeriodPicker() {
 		params.set('month', monthString)
 		params.set('view', 'month')
 		params.delete('year')
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 		setOpen(false)
 	}
 
@@ -90,7 +90,7 @@ export function PeriodPicker() {
 		params.set('year', year.toString())
 		params.set('view', 'year')
 		params.delete('month')
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 		setOpen(false)
 	}
 
@@ -109,7 +109,7 @@ export function PeriodPicker() {
 			params.set('month', `${year}-${month}`)
 		}
 		
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 	}
 
 	const handleNextPeriod = () => {
@@ -127,7 +127,7 @@ export function PeriodPicker() {
 			params.set('month', `${year}-${month}`)
 		}
 		
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 	}
 
 	const handleCurrentPeriod = () => {
@@ -140,7 +140,7 @@ export function PeriodPicker() {
 			params.set('month', `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
 		}
 		
-		router.push(`/?${params.toString()}`)
+		router.push(`/dashboard?${params.toString()}`)
 	}
 
 	const handleDaySelect = (date: Date | undefined) => {

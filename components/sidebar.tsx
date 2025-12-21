@@ -2,35 +2,46 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Wallet, Receipt, Tag, Target } from 'lucide-react'
+import { LayoutDashboard, Wallet, Receipt, Tag, Target, Settings, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BalanceToggle } from '@/components/features/balance-toggle'
+import { UserButton } from '@clerk/nextjs'
 
 const navigation = [
 	{
 		name: 'Dashboard',
-		href: '/',
+		href: '/dashboard',
 		icon: LayoutDashboard,
 	},
 	{
 		name: 'Transactions',
-		href: '/transactions',
+		href: '/dashboard/transactions',
 		icon: Receipt,
 	},
 	{
 		name: 'Accounts',
-		href: '/accounts',
+		href: '/dashboard/accounts',
 		icon: Wallet,
 	},
 	{
 		name: 'Categories',
-		href: '/categories',
+		href: '/dashboard/categories',
 		icon: Tag,
 	},
 	{
 		name: 'Goals',
-		href: '/goals',
+		href: '/dashboard/goals',
 		icon: Target,
+	},
+	{
+		name: 'Investments',
+		href: '/dashboard/investments',
+		icon: TrendingUp,
+	},
+	{
+		name: 'Settings',
+		href: '/dashboard/settings',
+		icon: Settings,
 	},
 ]
 
@@ -56,6 +67,11 @@ export function Sidebar() {
 					)
 				})}
 			</nav>
+			<div className="border-t p-4 bg-card/80">
+				<div className="flex items-center justify-center">
+					<UserButton />
+				</div>
+			</div>
 		</div>
 	)
 }

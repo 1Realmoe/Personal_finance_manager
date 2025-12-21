@@ -3,7 +3,7 @@ import { getAccounts } from '@/lib/data/accounts'
 import { getCategories } from '@/lib/data/categories'
 import { getTransactions } from '@/lib/data/transactions'
 import { AddTransactionSheet } from '@/components/features/add-transaction-sheet'
-import { TransactionsTableClient } from '@/components/features/transactions-table-client'
+import { TransactionsTableWrapper } from '@/components/features/transactions-table-wrapper'
 
 async function TransactionsTable({
 	accounts,
@@ -15,7 +15,7 @@ async function TransactionsTable({
 	const transactions = await getTransactions()
 
 	return (
-		<TransactionsTableClient 
+		<TransactionsTableWrapper
 			transactions={transactions}
 			accounts={accounts}
 			categories={categories}
@@ -25,7 +25,7 @@ async function TransactionsTable({
 
 export default async function TransactionsPage() {
 	const [accounts, categories] = await Promise.all([
-		getAccounts(),
+		getAccounts(true), // Exclude investment accounts from regular transactions
 		getCategories(),
 	])
 

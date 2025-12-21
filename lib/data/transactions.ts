@@ -1,10 +1,10 @@
 import { db } from '@/db'
 import { transactions, accounts, categories } from '@/db/schema'
 import { eq, desc, and, gte, lte } from 'drizzle-orm'
-
-const userId = 'user_1'
+import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function getTransactions(limit?: number) {
+	const clerkUserId = await getCurrentUserId()
 	const results = await db
 		.select({
 			id: transactions.id,
@@ -22,9 +22,15 @@ export async function getTransactions(limit?: number) {
 			recurrenceFrequency: transactions.recurrenceFrequency,
 		})
 		.from(transactions)
-		.leftJoin(accounts, eq(transactions.accountId, accounts.id))
-		.leftJoin(categories, eq(transactions.categoryId, categories.id))
-		.where(eq(transactions.userId, userId))
+		.leftJoin(accounts, and(
+			eq(transactions.accountId, accounts.id),
+			eq(accounts.clerkUserId, clerkUserId)
+		))
+		.leftJoin(categories, and(
+			eq(transactions.categoryId, categories.id),
+			eq(categories.clerkUserId, clerkUserId)
+		))
+		.where(eq(transactions.clerkUserId, clerkUserId))
 		.orderBy(desc(transactions.date))
 		.limit(limit || 100)
 
@@ -36,6 +42,7 @@ export async function getRecentTransactions(count: number = 5) {
 }
 
 export async function getTransactionsByMonth(year: number, month: number) {
+	const clerkUserId = await getCurrentUserId()
 	const startDate = new Date(year, month - 1, 1)
 	const endDate = new Date(year, month, 0, 23, 59, 59)
 
@@ -56,11 +63,17 @@ export async function getTransactionsByMonth(year: number, month: number) {
 			recurrenceFrequency: transactions.recurrenceFrequency,
 		})
 		.from(transactions)
-		.leftJoin(accounts, eq(transactions.accountId, accounts.id))
-		.leftJoin(categories, eq(transactions.categoryId, categories.id))
+		.leftJoin(accounts, and(
+			eq(transactions.accountId, accounts.id),
+			eq(accounts.clerkUserId, clerkUserId)
+		))
+		.leftJoin(categories, and(
+			eq(transactions.categoryId, categories.id),
+			eq(categories.clerkUserId, clerkUserId)
+		))
 		.where(
 			and(
-				eq(transactions.userId, userId),
+				eq(transactions.clerkUserId, clerkUserId),
 				gte(transactions.date, startDate),
 				lte(transactions.date, endDate)
 			)

@@ -34,7 +34,7 @@ const accountCurrencySchema = z.object({
 
 const accountSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
-	type: z.enum(['CURRENT', 'SAVINGS', 'CASH']),
+	type: z.enum(['CURRENT', 'SAVINGS', 'CASH', 'INVESTMENT']),
 	balance: z.string().min(0, 'Balance must be 0 or greater'),
 	color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format'),
 	currency: z.string().min(1, 'Currency is required'),
@@ -49,7 +49,7 @@ interface AccountFormProps {
 	initialData?: {
 		id?: string
 		name?: string
-		type?: 'CURRENT' | 'SAVINGS' | 'CASH'
+		type?: 'CURRENT' | 'SAVINGS' | 'CASH' | 'INVESTMENT'
 		balance?: string
 		color?: string
 		currency?: string
@@ -239,6 +239,7 @@ export function AccountForm({
 									<SelectItem value="CURRENT" className="cursor-pointer">Current</SelectItem>
 									<SelectItem value="SAVINGS" className="cursor-pointer">Savings</SelectItem>
 									<SelectItem value="CASH" className="cursor-pointer">Cash</SelectItem>
+									<SelectItem value="INVESTMENT" className="cursor-pointer">Investment</SelectItem>
 								</SelectContent>
 							</Select>
 							<FormMessage />
