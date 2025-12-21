@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { currencies, type CurrencyCode } from '@/lib/currency'
+import { currencies, type CurrencyCode, DEFAULT_CURRENCY } from '@/lib/format'
 import { Plus, X, ArrowUp, ArrowDown, Star, Upload, Image as ImageIcon } from 'lucide-react'
 import { useFieldArray } from 'react-hook-form'
 import { uploadCardImage } from '@/lib/actions/upload'
@@ -126,7 +126,7 @@ export function AccountForm({
 			type: initialData?.type || 'CURRENT',
 			balance: formatBalanceForInput(initialData?.balance),
 			color: initialData?.color || '#3B82F6',
-			currency: initialData?.currency || 'USD',
+			currency: initialData?.currency || DEFAULT_CURRENCY,
 			currencies: initialData?.currencies || [],
 			cardImage: initialData?.cardImage || '',
 		},

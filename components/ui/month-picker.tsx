@@ -9,9 +9,9 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
-import { format } from 'date-fns'
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatDateMonthYear } from '@/lib/format'
 
 export function MonthPicker() {
 	const router = useRouter()
@@ -81,7 +81,7 @@ export function MonthPicker() {
 						)}
 					>
 						<CalendarIcon />
-						{format(selectedDate, 'MMMM yyyy')}
+						{formatDateMonthYear(selectedDate)}
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -90,10 +90,6 @@ export function MonthPicker() {
 						selected={selectedDate}
 						onSelect={handleDaySelect}
 						defaultMonth={selectedDate}
-						initialFocus
-						captionLayout="dropdown-buttons"
-						fromYear={2020}
-						toYear={2030}
 					/>
 				</PopoverContent>
 			</Popover>

@@ -16,6 +16,8 @@ export async function getGoals() {
 			targetDate: goals.targetDate,
 			accountId: goals.accountId,
 			accountName: accounts.name,
+			icon: goals.icon,
+			color: goals.color,
 			createdAt: goals.createdAt,
 			updatedAt: goals.updatedAt,
 		})
@@ -38,6 +40,8 @@ export async function getGoalById(goalId: string) {
 			targetDate: goals.targetDate,
 			accountId: goals.accountId,
 			accountName: accounts.name,
+			icon: goals.icon,
+			color: goals.color,
 			createdAt: goals.createdAt,
 			updatedAt: goals.updatedAt,
 		})

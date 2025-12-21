@@ -40,6 +40,8 @@ interface GoalActionsProps {
 		currency: string
 		targetDate?: Date | null
 		accountId?: string | null
+		icon?: string
+		color?: string
 	}
 	accounts: Array<{ 
 		id: string

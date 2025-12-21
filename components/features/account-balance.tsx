@@ -1,6 +1,6 @@
 'use client'
 
-import { formatCurrency } from '@/lib/currency'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
 import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface AccountBalanceProps {
@@ -22,7 +22,7 @@ export function AccountBalance({ balance, currency, className }: AccountBalanceP
 
 	return (
 		<div className={`text-2xl font-bold ${className || ''}`}>
-			{formatCurrency(balance || '0', currency || 'USD')}
+			{formatCurrency(balance || '0', currency || DEFAULT_CURRENCY)}
 		</div>
 	)
 }

@@ -15,6 +15,8 @@ export async function createGoal(formData: {
 	currency: string
 	targetDate?: Date | null
 	accountId?: string | null
+	icon?: string
+	color?: string
 }) {
 	try {
 		const [goal] = await db
@@ -27,6 +29,8 @@ export async function createGoal(formData: {
 				currency: formData.currency,
 				targetDate: formData.targetDate || null,
 				accountId: formData.accountId || null,
+				icon: formData.icon || 'Target',
+				color: formData.color || '#8B5CF6',
 				userId,
 			})
 			.returning()
@@ -51,6 +55,8 @@ export async function updateGoal(
 		currency: string
 		targetDate?: Date | null
 		accountId?: string | null
+		icon?: string
+		color?: string
 	}
 ) {
 	try {
@@ -64,6 +70,8 @@ export async function updateGoal(
 				currency: formData.currency,
 				targetDate: formData.targetDate || null,
 				accountId: formData.accountId || null,
+				icon: formData.icon || 'Target',
+				color: formData.color || '#8B5CF6',
 				updatedAt: sql`NOW()`,
 			})
 			.where(eq(goals.id, goalId))

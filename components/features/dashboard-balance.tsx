@@ -1,6 +1,6 @@
 'use client'
 
-import { formatCurrency } from '@/lib/currency'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
 import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface DashboardBalanceProps {
@@ -9,7 +9,7 @@ interface DashboardBalanceProps {
 	className?: string
 }
 
-export function DashboardBalance({ amount, currency = 'USD', className }: DashboardBalanceProps) {
+export function DashboardBalance({ amount, currency = DEFAULT_CURRENCY, className }: DashboardBalanceProps) {
 	const { isBalanceVisible } = useBalanceVisibility()
 
 	if (!isBalanceVisible) {

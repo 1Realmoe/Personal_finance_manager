@@ -7,8 +7,22 @@ export const currencies = [
 
 export type CurrencyCode = typeof currencies[number]['code']
 
+/**
+ * Default currency code used throughout the application
+ * This is the single source of truth for the default currency
+ */
+export const DEFAULT_CURRENCY: CurrencyCode = 'USD'
+
 // Currencies that use postfix symbols (symbol comes after the number)
 const postfixCurrencies = ['SEK', 'NOK', 'DKK', 'PLN']
+
+/**
+ * Get the default currency code
+ * Returns the centralized default currency
+ */
+export function getDefaultCurrency(): CurrencyCode {
+	return DEFAULT_CURRENCY
+}
 
 export function getCurrencySymbol(currencyCode: string): string {
 	const currency = currencies.find((c) => c.code === currencyCode)
@@ -17,7 +31,7 @@ export function getCurrencySymbol(currencyCode: string): string {
 
 export function formatCurrency(
 	amount: number | string,
-	currencyCode: string = 'USD',
+	currencyCode: string = DEFAULT_CURRENCY,
 	options?: {
 		minimumFractionDigits?: number
 		maximumFractionDigits?: number
@@ -36,6 +50,7 @@ export function formatCurrency(
 }
 
 export function getCurrencyByCode(code: string) {
-	return currencies.find((c) => c.code === code) || currencies[0]
+	const found = currencies.find((c) => c.code === code)
+	return found || currencies.find((c) => c.code === DEFAULT_CURRENCY) || currencies[0]
 }
 

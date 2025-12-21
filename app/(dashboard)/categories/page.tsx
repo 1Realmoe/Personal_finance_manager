@@ -38,12 +38,14 @@ async function CategoriesList() {
 					return (
 						<Card
 							key={category.id}
-							className="transition-all duration-200 hover:shadow-md group relative"
+							className="transition-all duration-200 hover:shadow-md group relative overflow-hidden"
 						>
-							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
 								<CategoryActions category={category} />
 							</div>
-							<CardContent className="p-4 flex items-center gap-3">
+							{/* Gradient overlay from bottom */}
+							<div className="absolute inset-0 bg-gradient-to-l from-green-500/10 via-green-500/5 to-transparent pointer-events-none" />
+							<CardContent className="p-4 flex items-center gap-3 relative z-0">
 								<div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
 									<IconComponent className="h-5 w-5 text-primary" />
 								</div>

@@ -5,8 +5,8 @@ import { getAccounts } from '@/lib/data/accounts'
 import { GoalForm } from '@/components/features/goal-form'
 import { GoalActions } from '@/components/features/goal-actions'
 import { Target, TrendingUp } from 'lucide-react'
-import { formatCurrency } from '@/lib/currency'
-import { format } from 'date-fns'
+import { formatCurrency, formatDateShort, DEFAULT_CURRENCY } from '@/lib/format'
+import * as LucideIcons from 'lucide-react'
 
 function calculateProgress(currentAmount: string, targetAmount: string): number {
 	const current = parseFloat(currentAmount || '0')
@@ -15,11 +15,19 @@ function calculateProgress(currentAmount: string, targetAmount: string): number 
 	return Math.min((current / target) * 100, 100)
 }
 
-function getProgressColor(progress: number): string {
-	if (progress >= 100) return 'bg-green-500'
-	if (progress >= 75) return 'bg-blue-500'
-	if (progress >= 50) return 'bg-yellow-500'
-	return 'bg-primary'
+function getGradientColor(color: string): string {
+	// Create a gradient from the base color to a lighter version
+	const colorMap: Record<string, string> = {
+		'#8B5CF6': 'from-purple-500 to-purple-600',
+		'#3B82F6': 'from-blue-500 to-blue-600',
+		'#10B981': 'from-green-500 to-green-600',
+		'#F59E0B': 'from-amber-500 to-amber-600',
+		'#EF4444': 'from-red-500 to-red-600',
+		'#EC4899': 'from-pink-500 to-pink-600',
+		'#06B6D4': 'from-cyan-500 to-cyan-600',
+		'#6366F1': 'from-indigo-500 to-indigo-600',
+	}
+	return colorMap[color] || 'from-purple-500 to-purple-600'
 }
 
 async function GoalsList({
@@ -54,59 +62,78 @@ async function GoalsList({
 			<div className="grid gap-6 md:grid-cols-2">
 				{goals.map((goal) => {
 					const progress = calculateProgress(goal.currentAmount || '0', goal.targetAmount || '0')
-					const progressColor = getProgressColor(progress)
 					const isCompleted = progress >= 100
 					const currentAmount = parseFloat(goal.currentAmount || '0')
 					const targetAmount = parseFloat(goal.targetAmount || '0')
 					const remaining = Math.max(0, targetAmount - currentAmount)
+					const goalColor = goal.color || '#8B5CF6'
+					const goalIcon = goal.icon || 'Target'
+					const IconComponent = (LucideIcons as any)[goalIcon] || LucideIcons.Target
+					const gradientClass = getGradientColor(goalColor)
 
 					return (
 						<Card
 							key={goal.id}
-							className="transition-all duration-200 hover:shadow-md group relative"
+							className="transition-all duration-200 hover:shadow-lg group relative overflow-hidden"
+							style={{
+								borderLeft: `4px solid ${goalColor}`,
+							}}
 						>
-							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
 								<GoalActions goal={goal} accounts={accounts} />
 							</div>
 							<CardHeader className="pb-4">
 								<div className="flex items-start justify-between pr-8">
-									<div className="flex-1">
-										<CardTitle className="text-xl mb-1">{goal.title}</CardTitle>
-										{goal.description && (
-											<CardDescription className="mt-1">
-												{goal.description}
-											</CardDescription>
-										)}
+									<div className="flex items-start gap-3 flex-1">
+										<div 
+											className="h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0"
+											style={{ 
+												backgroundColor: `${goalColor}20`,
+											}}
+										>
+											<IconComponent 
+												className="h-6 w-6" 
+												style={{ color: goalColor }}
+											/>
+										</div>
+										<div className="flex-1 min-w-0">
+											<CardTitle className="text-xl mb-1">{goal.title}</CardTitle>
+											{goal.description && (
+												<CardDescription className="mt-1 line-clamp-2">
+													{goal.description}
+												</CardDescription>
+											)}
+										</div>
 									</div>
 								</div>
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div className="space-y-2">
 									<div className="flex items-center justify-between text-sm">
-										<span className="text-muted-foreground">Progress</span>
-										<span className="font-medium">
+										<span className="text-muted-foreground font-medium">Progress</span>
+										<span className="font-semibold" style={{ color: goalColor }}>
 											{progress.toFixed(1)}%
 										</span>
 									</div>
-									<div className="h-2 bg-muted rounded-full overflow-hidden">
+									<div className="h-3 bg-muted rounded-full overflow-hidden relative">
 										<div
-											className={`h-full ${progressColor} transition-all duration-300`}
+											className={`h-full bg-gradient-to-r ${gradientClass} transition-all duration-500 ease-out`}
 											style={{ width: `${progress}%` }}
 										/>
 									</div>
 								</div>
 
 								<div className="grid grid-cols-2 gap-4 pt-2">
-									<div>
-										<p className="text-xs text-muted-foreground mb-1">Current</p>
-										<p className="text-lg font-semibold">
-											{formatCurrency(currentAmount, goal.currency || 'USD')}
+									<div className="p-3 rounded-lg bg-muted/50">
+										<p className="text-xs text-muted-foreground mb-1 font-medium">Current</p>
+										<p className="text-lg font-bold" style={{ color: goalColor }}>
+											{formatCurrency(currentAmount, goal.currency || DEFAULT_CURRENCY)}
 										</p>
 									</div>
-									<div>
-										<p className="text-xs text-muted-foreground mb-1">Target</p>
-										<p className="text-lg font-semibold">
-											{formatCurrency(targetAmount, goal.currency || 'USD')}
+									<div className="p-3 rounded-lg bg-muted/50">
+										<p className="text-xs text-muted-foreground mb-1 font-medium">Target</p>
+										<p className="text-lg font-bold">
+											{formatCurrency(targetAmount, goal.currency || DEFAULT_CURRENCY)}
 										</p>
 									</div>
 								</div>
@@ -116,7 +143,7 @@ async function GoalsList({
 										<div className="flex items-center gap-2 text-sm">
 											<TrendingUp className="h-4 w-4 text-muted-foreground" />
 											<span className="text-muted-foreground">
-												{formatCurrency(remaining, goal.currency || 'USD')} remaining
+												{formatCurrency(remaining, goal.currency || DEFAULT_CURRENCY)} remaining
 											</span>
 										</div>
 									</div>
@@ -134,7 +161,7 @@ async function GoalsList({
 								{goal.targetDate && (
 									<div className="pt-2 border-t">
 										<p className="text-xs text-muted-foreground">
-											Target date: {format(new Date(goal.targetDate), 'MMM d, yyyy')}
+											Target date: {formatDateShort(goal.targetDate)}
 										</p>
 									</div>
 								)}

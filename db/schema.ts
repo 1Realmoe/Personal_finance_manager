@@ -9,7 +9,7 @@ export const accounts = pgTable('accounts', {
 	type: accountTypeEnum('type').notNull(),
 	balance: decimal('balance', { precision: 19, scale: 4 }).notNull().default('0'),
 	color: text('color').notNull(),
-	currency: text('currency').notNull().default('USD'), // Primary/default currency for backward compatibility
+	currency: text('currency').notNull().default('USD'), // Primary/default currency - matches DEFAULT_CURRENCY in lib/currency.ts
 	cardImage: text('card_image'), // Optional card background image
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
 })
@@ -37,7 +37,7 @@ export const transactions = pgTable('transactions', {
 	accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
 	categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
 	type: transactionTypeEnum('type').notNull(),
-	currency: text('currency').notNull().default('USD'),
+	currency: text('currency').notNull().default('USD'), // Matches DEFAULT_CURRENCY in lib/currency.ts
 	source: text('source'), // Optional source of income (e.g., YouTube, Affiliate, etc.)
 	isRecurrent: boolean('is_recurrent').notNull().default(false), // Whether this is a recurring transaction
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
@@ -49,9 +49,11 @@ export const goals = pgTable('goals', {
 	description: text('description'),
 	targetAmount: decimal('target_amount', { precision: 19, scale: 4 }).notNull(),
 	currentAmount: decimal('current_amount', { precision: 19, scale: 4 }).notNull().default('0'),
-	currency: text('currency').notNull().default('USD'),
+	currency: text('currency').notNull().default('USD'), // Matches DEFAULT_CURRENCY in lib/currency.ts
 	targetDate: timestamp('target_date'),
 	accountId: uuid('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+	icon: text('icon').notNull().default('Target'),
+	color: text('color').notNull().default('#8B5CF6'), // Default purple color
 	userId: text('user_id').notNull().default('user_1'), // Hardcoded for now
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),

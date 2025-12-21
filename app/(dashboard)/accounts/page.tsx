@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getAccounts } from '@/lib/data/accounts'
 import { AccountActions } from '@/components/features/account-actions'
 import { AccountBalance, AdditionalCurrencyBalance } from '@/components/features/account-balance'
+import { DEFAULT_CURRENCY } from '@/lib/format'
 import Image from 'next/image'
 
 async function AccountsList() {
@@ -100,7 +101,7 @@ async function AccountsList() {
 								<div className="space-y-2">
 									<AccountBalance
 										balance={account.balance || '0'}
-										currency={account.currency || 'USD'}
+										currency={account.currency || DEFAULT_CURRENCY}
 										className={`transition-colors group-hover:text-primary ${hasCardImage ? 'text-foreground' : ''}`}
 									/>
 									{account.additionalCurrencies && account.additionalCurrencies.length > 0 && (

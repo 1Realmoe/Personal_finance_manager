@@ -3,10 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { formatCurrency, formatDateForChart, DEFAULT_CURRENCY } from '@/lib/format'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
 
-interface MonthlyExpensesChartProps {
-	data: Array<{ date: string; total: number }>
+interface YearlyExpensesChartProps {
+	data: Array<{ month: number; total: number }>
 }
 
 const chartConfig = {
@@ -16,19 +16,24 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
-	// Format data for the chart - ensure all days of the month are represented
-	const chartData = data.map((item) => ({
-		date: formatDateForChart(item.date),
-		total: item.total,
-	}))
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	if (chartData.length === 0) {
+export function YearlyExpensesChart({ data }: YearlyExpensesChartProps) {
+	// Create data for all 12 months, filling in zeros for months without data
+	const chartData = Array.from({ length: 12 }, (_, i) => {
+		const monthData = data.find((d) => d.month === i + 1)
+		return {
+			month: monthNames[i],
+			total: monthData?.total || 0,
+		}
+	})
+
+	if (data.length === 0) {
 		return (
 			<Card className="border-dashed">
 				<CardHeader className="pb-3">
-					<CardTitle className="text-lg">Monthly Expenses</CardTitle>
-					<CardDescription className="text-sm">Daily spending for the current month</CardDescription>
+					<CardTitle className="text-lg">Yearly Expenses</CardTitle>
+					<CardDescription className="text-sm">Monthly spending breakdown</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-col h-[200px] items-center justify-center text-center">
@@ -50,7 +55,7 @@ export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
 						</div>
 						<h3 className="text-base font-semibold mb-1">No expense data</h3>
 						<p className="text-xs text-muted-foreground">
-							No expense data available for this month
+							No expense data available for this year
 						</p>
 					</div>
 				</CardContent>
@@ -61,15 +66,15 @@ export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
 	return (
 		<Card className="transition-shadow duration-200 hover:shadow-lg">
 			<CardHeader className="pb-3">
-				<CardTitle className="text-lg">Monthly Expenses</CardTitle>
-				<CardDescription className="text-sm">Daily spending for the current month</CardDescription>
+				<CardTitle className="text-lg">Yearly Expenses</CardTitle>
+				<CardDescription className="text-sm">Monthly spending breakdown</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer config={chartConfig} className="h-[200px] w-full">
 					<BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
 						<CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
 						<XAxis
-							dataKey="date"
+							dataKey="month"
 							tickLine={false}
 							axisLine={false}
 							tickMargin={6}
@@ -92,7 +97,7 @@ export function MonthlyExpensesChart({ data }: MonthlyExpensesChartProps) {
 										<div className="rounded-lg border bg-background p-2 shadow-sm">
 											<div className="grid gap-1">
 												<p className="text-xs text-muted-foreground">
-													{payload[0].payload.date}
+													{payload[0].payload.month}
 												</p>
 												<p className="text-sm font-bold text-red-600 dark:text-red-400">
 													{formatCurrency(payload[0].value as number, DEFAULT_CURRENCY)}

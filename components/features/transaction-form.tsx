@@ -30,9 +30,8 @@ import { CalendarIcon } from 'lucide-react'
 import { createTransaction, updateTransaction } from '@/lib/actions/transaction'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { getCurrencySymbol, currencies } from '@/lib/currency'
+import { getCurrencySymbol, currencies, formatDateFull, DEFAULT_CURRENCY } from '@/lib/format'
 
 const transactionSchema = z.object({
 	amount: z.string().min(0.01, 'Amount must be greater than 0'),
@@ -82,13 +81,13 @@ export function TransactionForm({
 	const isEdit = !!initialData?.id
 
 	// Determine default currency from initial data or first account
-	const getDefaultCurrency = () => {
+	const getDefaultCurrencyValue = () => {
 		if (initialData?.currency) return initialData.currency
 		if (initialData?.accountId) {
 			const account = accounts.find((acc) => acc.id === initialData.accountId)
-			return account?.currency || 'USD'
+			return account?.currency || DEFAULT_CURRENCY
 		}
-		return accounts.length > 0 ? (accounts[0].currency || 'USD') : 'USD'
+		return accounts.length > 0 ? (accounts[0].currency || DEFAULT_CURRENCY) : DEFAULT_CURRENCY
 	}
 
 	const form = useForm<TransactionFormValues>({
@@ -100,7 +99,7 @@ export function TransactionForm({
 			accountId: initialData?.accountId || '',
 			categoryId: initialData?.categoryId || '',
 			type: initialData?.type || 'EXPENSE',
-			currency: getDefaultCurrency(),
+			currency: getDefaultCurrencyValue(),
 			source: initialData?.source || '',
 			isRecurrent: initialData?.isRecurrent ?? false,
 		},
@@ -113,7 +112,7 @@ export function TransactionForm({
 	// Get all available currencies for the selected account (primary + additional)
 	const availableCurrencies = selectedAccount
 		? [
-				{ currency: selectedAccount.currency || 'USD' },
+				{ currency: selectedAccount.currency || DEFAULT_CURRENCY },
 				...(selectedAccount.additionalCurrencies || []),
 			]
 		: currencies.map((c) => ({ currency: c.code }))
@@ -264,7 +263,7 @@ export function TransactionForm({
 										>
 											<CalendarIcon className="mr-2 h-4 w-4" />
 											{field.value ? (
-												format(field.value, 'PPP')
+												formatDateFull(field.value)
 											) : (
 												<span>Pick a date</span>
 											)}
@@ -300,7 +299,7 @@ export function TransactionForm({
 									// Set default currency when account changes (only if currency not already set)
 									const account = accounts.find((acc) => acc.id === value)
 									if (account && !form.getValues('currency')) {
-										form.setValue('currency', account.currency || 'USD')
+										form.setValue('currency', account.currency || DEFAULT_CURRENCY)
 									}
 								}}
 								value={field.value}

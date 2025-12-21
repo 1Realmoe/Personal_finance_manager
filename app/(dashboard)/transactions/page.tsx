@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { format } from 'date-fns'
+import { formatDateShort, DEFAULT_CURRENCY } from '@/lib/format'
 import { AddTransactionSheet } from '@/components/features/add-transaction-sheet'
 import { TransactionActions } from '@/components/features/transaction-actions'
 import { TransactionAmount } from '@/components/features/transaction-amount'
@@ -71,7 +71,7 @@ async function TransactionsTable({
 							className="transition-colors duration-150 hover:bg-accent/50 group"
 						>
 							<TableCell className="text-muted-foreground">
-								{format(new Date(transaction.date), 'MMM d, yyyy')}
+								{formatDateShort(transaction.date)}
 							</TableCell>
 							<TableCell className="font-medium">
 								{transaction.description}
@@ -101,7 +101,7 @@ async function TransactionsTable({
 							<TableCell className="text-right">
 								<TransactionAmount
 									amount={transaction.amount || '0'}
-									currency={transaction.currency || 'USD'}
+									currency={transaction.currency || DEFAULT_CURRENCY}
 									type={transaction.type}
 								/>
 							</TableCell>

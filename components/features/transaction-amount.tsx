@@ -1,6 +1,6 @@
 'use client'
 
-import { formatCurrency } from '@/lib/currency'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/format'
 import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 
 interface TransactionAmountProps {
@@ -30,7 +30,7 @@ export function TransactionAmount({ amount, currency, type, className }: Transac
 			} ${className || ''}`}
 		>
 			{type === 'INCOME' ? '+' : '-'}
-			{formatCurrency(amount || '0', currency || 'USD')}
+			{formatCurrency(amount || '0', currency || DEFAULT_CURRENCY)}
 		</span>
 	)
 }

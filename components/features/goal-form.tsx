@@ -35,12 +35,11 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { CalendarIcon, Plus } from 'lucide-react'
+import { CalendarIcon, Plus, Target, Home, Utensils, DollarSign, ShoppingCart, Car, Heart, Gamepad2, Coffee, Plane, GraduationCap, PiggyBank, Briefcase, Gift, House } from 'lucide-react'
 import { createGoal, updateGoal } from '@/lib/actions/goal'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { currencies } from '@/lib/currency'
+import { currencies, formatDateFull, DEFAULT_CURRENCY } from '@/lib/format'
 
 const goalSchema = z.object({
 	title: z.string().min(1, 'Title is required'),
@@ -50,7 +49,37 @@ const goalSchema = z.object({
 	currency: z.string().min(1, 'Currency is required'),
 	targetDate: z.date().optional().nullable(),
 	accountId: z.string().optional(),
+	icon: z.string().min(1, 'Icon is required'),
+	color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format'),
 })
+
+const iconOptions = [
+	{ value: 'Target', label: 'Target', icon: Target },
+	{ value: 'PiggyBank', label: 'Savings', icon: PiggyBank },
+	{ value: 'Home', label: 'Home', icon: Home },
+	{ value: 'Plane', label: 'Travel', icon: Plane },
+	{ value: 'Car', label: 'Car', icon: Car },
+	{ value: 'GraduationCap', label: 'Education', icon: GraduationCap },
+	{ value: 'Heart', label: 'Health', icon: Heart },
+	{ value: 'Gift', label: 'Gift', icon: Gift },
+	{ value: 'Briefcase', label: 'Business', icon: Briefcase },
+	{ value: 'DollarSign', label: 'Money', icon: DollarSign },
+	{ value: 'ShoppingCart', label: 'Shopping', icon: ShoppingCart },
+	{ value: 'Utensils', label: 'Food', icon: Utensils },
+	{ value: 'Coffee', label: 'Coffee', icon: Coffee },
+	{ value: 'Gamepad2', label: 'Entertainment', icon: Gamepad2 },
+]
+
+const colorOptions = [
+	{ value: '#8B5CF6', label: 'Purple', color: '#8B5CF6' },
+	{ value: '#3B82F6', label: 'Blue', color: '#3B82F6' },
+	{ value: '#10B981', label: 'Green', color: '#10B981' },
+	{ value: '#F59E0B', label: 'Amber', color: '#F59E0B' },
+	{ value: '#EF4444', label: 'Red', color: '#EF4444' },
+	{ value: '#EC4899', label: 'Pink', color: '#EC4899' },
+	{ value: '#06B6D4', label: 'Cyan', color: '#06B6D4' },
+	{ value: '#6366F1', label: 'Indigo', color: '#6366F1' },
+]
 
 type GoalFormValues = z.infer<typeof goalSchema>
 
@@ -70,6 +99,8 @@ interface GoalFormProps {
 		currency?: string
 		targetDate?: Date | null
 		accountId?: string | null
+		icon?: string
+		color?: string
 	}
 }
 
@@ -90,9 +121,11 @@ export function GoalForm({
 			description: initialData?.description || '',
 			targetAmount: initialData?.targetAmount || '',
 			currentAmount: initialData?.currentAmount || '0',
-			currency: initialData?.currency || accounts[0]?.currency || 'USD',
+			currency: initialData?.currency || accounts[0]?.currency || DEFAULT_CURRENCY,
 			targetDate: initialData?.targetDate ? new Date(initialData.targetDate) : null,
-			accountId: initialData?.accountId || '',
+			accountId: initialData?.accountId || undefined,
+			icon: initialData?.icon || 'Target',
+			color: initialData?.color || '#8B5CF6',
 		},
 	})
 
@@ -108,6 +141,8 @@ export function GoalForm({
 					currency: values.currency,
 					targetDate: values.targetDate || null,
 					accountId: values.accountId && values.accountId.trim() !== '' ? values.accountId : null,
+					icon: values.icon,
+					color: values.color,
 				})
 				: await createGoal({
 					title: values.title,
@@ -117,6 +152,8 @@ export function GoalForm({
 					currency: values.currency,
 					targetDate: values.targetDate || null,
 					accountId: values.accountId && values.accountId.trim() !== '' ? values.accountId : null,
+					icon: values.icon,
+					color: values.color,
 				})
 
 			if (result.success) {
@@ -268,7 +305,7 @@ export function GoalForm({
 										>
 											<CalendarIcon className="mr-2 h-4 w-4" />
 											{field.value ? (
-												format(field.value, 'PPP')
+												formatDateFull(field.value)
 											) : (
 												<span>Pick a date</span>
 											)}
@@ -292,13 +329,83 @@ export function GoalForm({
 
 				<FormField
 					control={form.control}
+					name="icon"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="text-sm font-medium">Icon</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={field.value}
+							>
+								<FormControl>
+									<SelectTrigger className="h-11">
+										<SelectValue placeholder="Select icon" />
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									{iconOptions.map((icon) => {
+										const IconComponent = icon.icon
+										return (
+											<SelectItem key={icon.value} value={icon.value} className="cursor-pointer">
+												<div className="flex items-center gap-2">
+													<IconComponent className="h-4 w-4" />
+													{icon.label}
+												</div>
+											</SelectItem>
+										)
+									})}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="color"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="text-sm font-medium">Color</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={field.value}
+							>
+								<FormControl>
+									<SelectTrigger className="h-11">
+										<SelectValue placeholder="Select color" />
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									{colorOptions.map((colorOption) => (
+										<SelectItem key={colorOption.value} value={colorOption.value} className="cursor-pointer">
+											<div className="flex items-center gap-2">
+												<div 
+													className="h-4 w-4 rounded-full border border-gray-300"
+													style={{ backgroundColor: colorOption.color }}
+												/>
+												{colorOption.label}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
 					name="accountId"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="text-sm font-medium">Linked Account (Optional)</FormLabel>
 							<Select
-								onValueChange={field.onChange}
-								value={field.value || ''}
+								onValueChange={(value) => {
+									field.onChange(value === 'none' ? undefined : value)
+								}}
+								value={field.value || 'none'}
 							>
 								<FormControl>
 									<SelectTrigger className="h-11">
@@ -306,7 +413,7 @@ export function GoalForm({
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
-									<SelectItem value="" className="cursor-pointer">
+									<SelectItem value="none" className="cursor-pointer">
 										None
 									</SelectItem>
 									{accounts.map((account) => (
