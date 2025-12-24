@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { DEFAULT_CURRENCY, CurrencyCode } from '@/lib/currency'
-import { transactions, categories, accounts, goals } from '@/db/schema'
+import { transactions, categories, accounts, goals, sources } from '@/db/schema'
 import { eq, and, gte, lte, sql, sum, count, desc, or, isNull } from 'drizzle-orm'
 import { convertAndSum } from '@/lib/exchange'
 import { getUserBaseCurrency } from '@/lib/actions/user'
@@ -653,5 +653,57 @@ export async function getYearlySingleExpenses(year: number) {
 		currency: r.currency || DEFAULT_CURRENCY,
 		date: r.date,
 	}))
+}
+
+export async function getTopIncomeSources() {
+	const clerkUserId = await getCurrentUserId()
+
+	// Group by source AND currency, then sum in SQL (all time)
+	const groupedResults = await db
+		.select({
+			sourceName: sources.name,
+			currency: transactions.currency,
+			total: sum(transactions.amount),
+		})
+		.from(transactions)
+		.leftJoin(sources, and(
+			eq(transactions.sourceId, sources.id),
+			eq(sources.clerkUserId, clerkUserId)
+		))
+		.where(
+			and(
+				eq(transactions.clerkUserId, clerkUserId),
+				eq(transactions.type, 'INCOME')
+			)
+		)
+		.groupBy(sources.name, transactions.currency)
+
+	// Get base currency
+	const baseCurrency = await getUserBaseCurrency()
+
+	// Group by source and convert amounts
+	const sourceMap = new Map<string, Array<{ currency: CurrencyCode; amount: number }>>()
+
+	for (const r of groupedResults) {
+		const sourceName = r.sourceName || 'Unspecified'
+		if (!sourceMap.has(sourceName)) {
+			sourceMap.set(sourceName, [])
+		}
+		sourceMap.get(sourceName)!.push({
+			currency: (r.currency || DEFAULT_CURRENCY) as CurrencyCode,
+			amount: parseFloat(r.total || '0'),
+		})
+	}
+
+	// Convert each source's amounts and return, sorted by total
+	const results = await Promise.all(
+		Array.from(sourceMap.entries()).map(async ([sourceName, amounts]) => ({
+			sourceName,
+			total: await convertAndSum(amounts, baseCurrency),
+			currency: baseCurrency,
+		}))
+	)
+
+	return results.sort((a, b) => b.total - a.total)
 }
 

@@ -181,3 +181,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Clerk UserProfile styling */
+.clerk-user-profile-wrapper {
+  @apply overflow-hidden;
+}
+
+.clerk-user-profile-wrapper > * {
+  @apply w-full;
+}

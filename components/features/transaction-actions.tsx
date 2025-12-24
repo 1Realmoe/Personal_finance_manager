@@ -38,15 +38,18 @@ interface TransactionActionsProps {
 		description: string
 		date: Date | string
 		accountId: string
+		toAccountId?: string | null
 		categoryId?: string | null
-		type: 'INCOME' | 'EXPENSE'
+		type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 		currency?: string
-		source?: string | null
+		sourceId?: string | null
 		isRecurrent?: boolean
 		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
+		receiptImage?: string | null
 	}
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
+	sources?: Array<{ id: string; name: string; icon: string }>
 }
 
 export function TransactionActions({ 
@@ -54,6 +57,7 @@ export function TransactionActions({
 	transaction,
 	accounts,
 	categories,
+	sources = [],
 }: TransactionActionsProps) {
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [editOpen, setEditOpen] = useState(false)
@@ -137,18 +141,21 @@ export function TransactionActions({
 						<TransactionForm
 							accounts={accounts}
 							categories={categories}
+							sources={sources}
 							initialData={{
 							id: transaction.id,
 							amount: transaction.amount,
 							description: transaction.description,
 							date: typeof transaction.date === 'string' ? new Date(transaction.date) : transaction.date,
 							accountId: transaction.accountId,
+							toAccountId: transaction.toAccountId || null,
 							categoryId: transaction.categoryId,
 							type: transaction.type,
 							currency: transaction.currency,
-							source: transaction.source || null,
+							sourceId: transaction.sourceId || null,
 							isRecurrent: transaction.isRecurrent || false,
 							recurrenceFrequency: transaction.recurrenceFrequency || null,
+							receiptImage: transaction.receiptImage || null,
 						}}
 							onSuccess={() => {
 								setEditOpen(false)

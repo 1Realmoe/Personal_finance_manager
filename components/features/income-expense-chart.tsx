@@ -43,6 +43,7 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 	
 	const formatAmount = (amount: number) => {
 		if (!isBalanceVisible) return '••••••'
+		// Always format 0 values, don't hide them
 		return formatCurrency(amount, currency)
 	}
 
@@ -120,12 +121,14 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 								dataKey="income"
 								fill="var(--color-income)"
 								radius={[4, 4, 0, 0]}
+								barSize={52}
 								className="transition-opacity hover:opacity-80"
 							/>
 							<Bar
 								dataKey="expense"
 								fill="var(--color-expense)"
 								radius={[4, 4, 0, 0]}
+								barSize={52}
 								className="transition-opacity hover:opacity-80"
 							/>
 						</BarChart>
@@ -146,7 +149,12 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 						<div className="text-right">
 							<p className="text-sm text-muted-foreground">Savings Rate</p>
 							<p className="text-2xl font-bold">
-								{isBalanceVisible && income > 0 ? ((netAmount / income) * 100).toFixed(1) : '•••'}%
+								{!isBalanceVisible 
+									? '•••'
+									: income > 0 
+										? ((netAmount / income) * 100).toFixed(1)
+										: '0.0'
+								}%
 							</p>
 						</div>
 					</div>

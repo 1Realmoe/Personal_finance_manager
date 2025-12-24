@@ -130,7 +130,7 @@ export function HoldingsTable({ holdings, accountId }: HoldingsTableProps) {
 									)}
 								>
 									{gainLossPercent >= 0 ? '+' : ''}
-									{isBalanceVisible ? gainLossPercent.toFixed(2) : '•••'}%
+									{isBalanceVisible ? (gainLossPercent === 0 ? '0.00' : gainLossPercent.toFixed(2)) : '•••'}%
 								</TableCell>
 								<TableCell>
 									<div className="opacity-0 group-hover:opacity-100 transition-opacity">

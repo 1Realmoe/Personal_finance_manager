@@ -11,18 +11,20 @@ export async function createTransaction(formData: {
 	description: string
 	date: Date
 	accountId: string
+	toAccountId?: string | null
 	categoryId?: string | null
-	type: 'INCOME' | 'EXPENSE'
+	type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 	currency: string
-	source?: string | null
+	sourceId?: string | null
 	isRecurrent?: boolean
 	recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
+	receiptImage?: string | null
 }) {
 	try {
 		const clerkUserId = await getCurrentUserId()
 		
-		// Verify account belongs to user
-		const [account] = await db
+		// Verify from account belongs to user
+		const [fromAccount] = await db
 			.select()
 			.from(accounts)
 			.where(
@@ -33,8 +35,34 @@ export async function createTransaction(formData: {
 			)
 			.limit(1)
 
-		if (!account) {
+		if (!fromAccount) {
 			return { success: false, error: 'Account not found' }
+		}
+
+		// For transfers, verify to account belongs to user
+		if (formData.type === 'TRANSFER') {
+			if (!formData.toAccountId) {
+				return { success: false, error: 'Destination account is required for transfers' }
+			}
+
+			if (formData.accountId === formData.toAccountId) {
+				return { success: false, error: 'Cannot transfer to the same account' }
+			}
+
+			const [toAccount] = await db
+				.select()
+				.from(accounts)
+				.where(
+					and(
+						eq(accounts.id, formData.toAccountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+				.limit(1)
+
+			if (!toAccount) {
+				return { success: false, error: 'Destination account not found' }
+			}
 		}
 
 		// Insert transaction
@@ -45,31 +73,62 @@ export async function createTransaction(formData: {
 				description: formData.description,
 				date: formData.date,
 				accountId: formData.accountId,
+				toAccountId: formData.type === 'TRANSFER' ? formData.toAccountId || null : null,
 				categoryId: formData.categoryId || null,
 				type: formData.type,
 				currency: formData.currency,
-				source: formData.source || null,
+				sourceId: formData.sourceId || null,
 				isRecurrent: formData.isRecurrent || false,
 				recurrenceFrequency: formData.recurrenceFrequency || null,
+				receiptImage: formData.receiptImage || null,
 				clerkUserId,
 			})
 			.returning()
 
-		// Update account balance using SQL
+		// Update account balance(s)
 		const amount = parseFloat(formData.amount)
-		const balanceChange = formData.type === 'INCOME' ? amount : -amount
-
-		await db
-			.update(accounts)
-			.set({
-				balance: sql`${accounts.balance} + ${balanceChange}`,
-			})
-			.where(
-				and(
-					eq(accounts.id, formData.accountId),
-					eq(accounts.clerkUserId, clerkUserId)
+		
+		if (formData.type === 'TRANSFER') {
+			// For transfers: decrease from account, increase to account
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} - ${amount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
 				)
-			)
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${amount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.toAccountId!),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		} else {
+			// For income/expense: update single account
+			const balanceChange = formData.type === 'INCOME' ? amount : -amount
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${balanceChange}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		}
 
 		revalidatePath('/dashboard')
 		revalidatePath('/transactions')
@@ -89,12 +148,14 @@ export async function updateTransaction(
 		description: string
 		date: Date
 		accountId: string
+		toAccountId?: string | null
 		categoryId?: string | null
-		type: 'INCOME' | 'EXPENSE'
+		type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 		currency: string
-		source?: string | null
+		sourceId?: string | null
 		isRecurrent?: boolean
 		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
+		receiptImage?: string | null
 	}
 ) {
 	try {
@@ -115,51 +176,79 @@ export async function updateTransaction(
 			return { success: false, error: 'Transaction not found' }
 		}
 
-		// Revert old transaction's effect on account balance
+		// Revert old transaction's effect on account balance(s)
 		const oldAmount = parseFloat(oldTransaction.amount)
-		const oldBalanceChange = oldTransaction.type === 'INCOME' ? -oldAmount : oldAmount
-
-		await db
-			.update(accounts)
-			.set({
-				balance: sql`${accounts.balance} + ${oldBalanceChange}`,
-			})
-			.where(
-				and(
-					eq(accounts.id, oldTransaction.accountId),
-					eq(accounts.clerkUserId, clerkUserId)
+		
+		if (oldTransaction.type === 'TRANSFER' && oldTransaction.toAccountId) {
+			// Revert transfer: increase from account, decrease to account
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${oldAmount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, oldTransaction.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
 				)
-			)
 
-		// Update transaction
-		const [transaction] = await db
-			.update(transactions)
-			.set({
-				amount: formData.amount,
-				description: formData.description,
-				date: formData.date,
-				accountId: formData.accountId,
-				categoryId: formData.categoryId || null,
-				type: formData.type,
-				currency: formData.currency,
-				source: formData.source || null,
-				isRecurrent: formData.isRecurrent || false,
-				recurrenceFrequency: formData.recurrenceFrequency || null,
-			})
-			.where(
-				and(
-					eq(transactions.id, transactionId),
-					eq(transactions.clerkUserId, clerkUserId)
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} - ${oldAmount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, oldTransaction.toAccountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
 				)
-			)
-			.returning()
+		} else {
+			// Revert income/expense
+			const oldBalanceChange = oldTransaction.type === 'INCOME' ? -oldAmount : oldAmount
 
-		// Apply new transaction's effect on account balance
-		const newAmount = parseFloat(formData.amount)
-		const newBalanceChange = formData.type === 'INCOME' ? newAmount : -newAmount
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${oldBalanceChange}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, oldTransaction.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		}
 
-		// Verify new account belongs to user
-		const [newAccount] = await db
+		// For transfers, verify to account belongs to user
+		if (formData.type === 'TRANSFER') {
+			if (!formData.toAccountId) {
+				return { success: false, error: 'Destination account is required for transfers' }
+			}
+
+			if (formData.accountId === formData.toAccountId) {
+				return { success: false, error: 'Cannot transfer to the same account' }
+			}
+
+			const [toAccount] = await db
+				.select()
+				.from(accounts)
+				.where(
+					and(
+						eq(accounts.id, formData.toAccountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+				.limit(1)
+
+			if (!toAccount) {
+				return { success: false, error: 'Destination account not found' }
+			}
+		}
+
+		// Verify from account belongs to user
+		const [fromAccount] = await db
 			.select()
 			.from(accounts)
 			.where(
@@ -170,25 +259,78 @@ export async function updateTransaction(
 			)
 			.limit(1)
 
-		if (!newAccount) {
+		if (!fromAccount) {
 			return { success: false, error: 'Account not found' }
 		}
 
-		await db
-			.update(accounts)
+		// Update transaction
+		const [transaction] = await db
+			.update(transactions)
 			.set({
-				balance: sql`${accounts.balance} + ${newBalanceChange}`,
+				amount: formData.amount,
+				description: formData.description,
+				date: formData.date,
+				accountId: formData.accountId,
+				toAccountId: formData.type === 'TRANSFER' ? formData.toAccountId || null : null,
+				categoryId: formData.categoryId || null,
+				type: formData.type,
+				currency: formData.currency,
+				sourceId: formData.sourceId || null,
+				isRecurrent: formData.isRecurrent || false,
+				recurrenceFrequency: formData.recurrenceFrequency || null,
+				receiptImage: formData.receiptImage !== undefined ? formData.receiptImage : undefined,
 			})
 			.where(
 				and(
-					eq(accounts.id, formData.accountId),
-					eq(accounts.clerkUserId, clerkUserId)
+					eq(transactions.id, transactionId),
+					eq(transactions.clerkUserId, clerkUserId)
 				)
 			)
+			.returning()
 
-		// If account changed, also update the old account balance
-		if (oldTransaction.accountId !== formData.accountId) {
-			// Old account balance was already reverted above, no need to do anything
+		// Apply new transaction's effect on account balance(s)
+		const newAmount = parseFloat(formData.amount)
+		
+		if (formData.type === 'TRANSFER') {
+			// For transfers: decrease from account, increase to account
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} - ${newAmount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${newAmount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.toAccountId!),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		} else {
+			// For income/expense: update single account
+			const newBalanceChange = formData.type === 'INCOME' ? newAmount : -newAmount
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${newBalanceChange}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, formData.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
 		}
 
 		revalidatePath('/dashboard')
@@ -231,21 +373,50 @@ export async function deleteTransaction(transactionId: string) {
 				)
 			)
 
-		// Revert account balance
+		// Revert account balance(s)
 		const amount = parseFloat(transaction.amount)
-		const balanceChange = transaction.type === 'INCOME' ? -amount : amount
-
-		await db
-			.update(accounts)
-			.set({
-				balance: sql`${accounts.balance} + ${balanceChange}`,
-			})
-			.where(
-				and(
-					eq(accounts.id, transaction.accountId),
-					eq(accounts.clerkUserId, clerkUserId)
+		
+		if (transaction.type === 'TRANSFER' && transaction.toAccountId) {
+			// Revert transfer: increase from account, decrease to account
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${amount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, transaction.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
 				)
-			)
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} - ${amount}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, transaction.toAccountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		} else {
+			// Revert income/expense
+			const balanceChange = transaction.type === 'INCOME' ? -amount : amount
+
+			await db
+				.update(accounts)
+				.set({
+					balance: sql`${accounts.balance} + ${balanceChange}`,
+				})
+				.where(
+					and(
+						eq(accounts.id, transaction.accountId),
+						eq(accounts.clerkUserId, clerkUserId)
+					)
+				)
+		}
 
 		revalidatePath('/dashboard')
 		revalidatePath('/transactions')

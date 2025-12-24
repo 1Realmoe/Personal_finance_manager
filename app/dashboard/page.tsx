@@ -18,11 +18,13 @@ import {
 	getYearlyTopExpensesByCategory,
 	getYearlyFrequentExpenses,
 	getYearlySingleExpenses,
+	getTopIncomeSources,
 } from '@/lib/data/dashboard'
 import { MonthlyExpensesChart } from '@/components/features/monthly-expenses-chart'
 import { YearlyExpensesChart } from '@/components/features/yearly-expenses-chart'
 import { CategoryBreakdownChart } from '@/components/features/category-breakdown-chart'
 import { IncomeExpenseChart } from '@/components/features/income-expense-chart'
+import { TopIncomeSourcesChart } from '@/components/features/top-income-sources-chart'
 import { PeriodPicker } from '@/components/ui/period-picker'
 import { DashboardBalance } from '@/components/features/dashboard-balance'
 import { TransactionAmount } from '@/components/features/transaction-amount'
@@ -417,6 +419,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 							<div className="h-6 w-40 bg-muted rounded animate-pulse" />
 						</CardHeader>
 						<CardContent>
+							<div className="h-[600px] bg-muted rounded animate-pulse" />
+						</CardContent>
+					</Card>
+				}
+			>
+				<TopIncomeSourcesChartWrapper />
+			</Suspense>
+
+			<Suspense
+				fallback={
+					<Card>
+						<CardHeader>
+							<div className="h-6 w-40 bg-muted rounded animate-pulse" />
+						</CardHeader>
+						<CardContent>
 							<div className="space-y-4">
 								{[1, 2, 3].map((i) => (
 									<div key={i} className="h-16 bg-muted rounded animate-pulse" />
@@ -652,4 +669,10 @@ async function ExpensesChartWrapper({
 		const dailyExpenses = await getDailyExpensesForMonth(year, month)
 		return <MonthlyExpensesChart data={dailyExpenses} currency={baseCurrency} />
 	}
+}
+
+async function TopIncomeSourcesChartWrapper() {
+	const baseCurrency = await getUserBaseCurrency()
+	const incomeSources = await getTopIncomeSources()
+	return <TopIncomeSourcesChart data={incomeSources} displayCurrency={baseCurrency} />
 }

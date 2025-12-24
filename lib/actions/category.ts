@@ -21,8 +21,8 @@ export async function createCategory(formData: {
 			})
 			.returning()
 
-		revalidatePath('/categories')
-		revalidatePath('/transactions')
+		revalidatePath('/dashboard/categories')
+		revalidatePath('/dashboard/transactions')
 
 		return { success: true, category }
 	} catch (error) {
@@ -58,8 +58,8 @@ export async function updateCategory(
 			return { success: false, error: 'Category not found' }
 		}
 
-		revalidatePath('/categories')
-		revalidatePath('/transactions')
+		revalidatePath('/dashboard/categories')
+		revalidatePath('/dashboard/transactions')
 
 		return { success: true, category }
 	} catch (error) {
@@ -111,8 +111,8 @@ export async function deleteCategory(categoryId: string) {
 				)
 			)
 
-		revalidatePath('/categories')
-		revalidatePath('/transactions')
+		revalidatePath('/dashboard/categories')
+		revalidatePath('/dashboard/transactions')
 
 		return { success: true }
 	} catch (error) {

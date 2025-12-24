@@ -22,11 +22,13 @@ interface AddTransactionDialogProps {
 		additionalCurrencies?: Array<{ currency: string; balance: string }>
 	}>
 	categories: Array<{ id: string; name: string }>
+	sources?: Array<{ id: string; name: string; icon: string }>
 }
 
 export function AddTransactionSheet({
 	accounts,
 	categories,
+	sources = [],
 }: AddTransactionDialogProps) {
 	const [open, setOpen] = useState(false)
 	const router = useRouter()
@@ -55,6 +57,7 @@ export function AddTransactionSheet({
 					<TransactionForm
 						accounts={accounts}
 						categories={categories}
+						sources={sources}
 						onSuccess={handleSuccess}
 					/>
 				</div>

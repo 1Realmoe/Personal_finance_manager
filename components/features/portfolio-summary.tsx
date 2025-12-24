@@ -100,7 +100,7 @@ export function PortfolioSummary({
 						)}
 					>
 						{isPositive ? '+' : ''}
-						{isBalanceVisible ? gainLossPercent.toFixed(2) : '•••'}%
+						{isBalanceVisible ? (gainLossPercent === 0 ? '0.00' : gainLossPercent.toFixed(2)) : '•••'}%
 					</div>
 					<p className="text-xs text-muted-foreground mt-1">
 						{holdingsCount} {holdingsCount === 1 ? 'holding' : 'holdings'}

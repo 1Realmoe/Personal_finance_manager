@@ -6,7 +6,7 @@ import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
 interface TransactionAmountProps {
 	amount: string
 	currency: string
-	type: 'INCOME' | 'EXPENSE'
+	type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 	className?: string
 }
 
@@ -21,15 +21,20 @@ export function TransactionAmount({ amount, currency, type, className }: Transac
 		)
 	}
 
+	const isTransfer = type === 'TRANSFER'
+	const isIncome = type === 'INCOME'
+
 	return (
 		<span
 			className={`text-right font-semibold transition-colors ${
-				type === 'INCOME'
+				isIncome
 					? 'text-green-600 dark:text-green-400'
+					: isTransfer
+					? 'text-blue-600 dark:text-blue-400'
 					: 'text-red-600 dark:text-red-400'
 			} ${className || ''}`}
 		>
-			{type === 'INCOME' ? '+' : '-'}
+			{isIncome ? '+' : isTransfer ? '' : '-'}
 			{formatCurrency(amount || '0', currency || DEFAULT_CURRENCY)}
 		</span>
 	)

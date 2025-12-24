@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { getAccounts } from '@/lib/data/accounts'
 import { getCategories } from '@/lib/data/categories'
+import { getSources } from '@/lib/data/sources'
 import { getTransactions } from '@/lib/data/transactions'
 import { AddTransactionSheet } from '@/components/features/add-transaction-sheet'
 import { TransactionsTableWrapper } from '@/components/features/transactions-table-wrapper'
@@ -8,9 +9,11 @@ import { TransactionsTableWrapper } from '@/components/features/transactions-tab
 async function TransactionsTable({
 	accounts,
 	categories,
+	sources,
 }: {
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
+	sources: Array<{ id: string; name: string; icon: string }>
 }) {
 	const transactions = await getTransactions()
 
@@ -19,14 +22,16 @@ async function TransactionsTable({
 			transactions={transactions}
 			accounts={accounts}
 			categories={categories}
+			sources={sources}
 		/>
 	)
 }
 
 export default async function TransactionsPage() {
-	const [accounts, categories] = await Promise.all([
+	const [accounts, categories, sources] = await Promise.all([
 		getAccounts(true), // Exclude investment accounts from regular transactions
 		getCategories(),
+		getSources(),
 	])
 
 	return (
@@ -38,7 +43,7 @@ export default async function TransactionsPage() {
 						View and manage all your transactions
 					</p>
 				</div>
-				<AddTransactionSheet accounts={accounts} categories={categories} />
+				<AddTransactionSheet accounts={accounts} categories={categories} sources={sources} />
 			</div>
 
 			<Suspense
@@ -52,7 +57,7 @@ export default async function TransactionsPage() {
 					</div>
 				}
 			>
-				<TransactionsTable accounts={accounts} categories={categories} />
+				<TransactionsTable accounts={accounts} categories={categories} sources={sources} />
 			</Suspense>
 		</div>
 	)

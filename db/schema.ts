@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, decimal, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core'
 
 export const accountTypeEnum = pgEnum('account_type', ['CURRENT', 'SAVINGS', 'CASH', 'INVESTMENT'])
-export const transactionTypeEnum = pgEnum('transaction_type', ['INCOME', 'EXPENSE'])
+export const transactionTypeEnum = pgEnum('transaction_type', ['INCOME', 'EXPENSE', 'TRANSFER'])
 export const recurrenceFrequencyEnum = pgEnum('recurrence_frequency', ['MONTHLY', 'YEARLY', 'WEEKLY', 'DAILY'])
 export const assetTypeEnum = pgEnum('asset_type', ['STOCK', 'CRYPTO'])
 export const investmentTransactionTypeEnum = pgEnum('investment_transaction_type', ['BUY', 'SELL'])
@@ -32,18 +32,27 @@ export const categories = pgTable('categories', {
 	clerkUserId: text('clerk_user_id').notNull(), // Clerk user ID
 })
 
+export const sources = pgTable('sources', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	name: text('name').notNull(),
+	icon: text('icon').notNull(),
+	clerkUserId: text('clerk_user_id').notNull(), // Clerk user ID
+})
+
 export const transactions = pgTable('transactions', {
 	id: uuid('id').defaultRandom().primaryKey(),
 	amount: decimal('amount', { precision: 19, scale: 4 }).notNull(),
 	description: text('description').notNull(),
 	date: timestamp('date').notNull().defaultNow(),
 	accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+	toAccountId: uuid('to_account_id').references(() => accounts.id, { onDelete: 'set null' }), // Destination account for transfers
 	categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
 	type: transactionTypeEnum('type').notNull(),
 	currency: text('currency').notNull().default('USD'), // Matches DEFAULT_CURRENCY in lib/currency.ts
-	source: text('source'), // Optional source of income (e.g., YouTube, Affiliate, etc.)
+	sourceId: uuid('source_id').references(() => sources.id, { onDelete: 'set null' }), // Optional source of income (e.g., YouTube, Affiliate, etc.)
 	isRecurrent: boolean('is_recurrent').notNull().default(false), // Whether this is a recurring transaction
 	recurrenceFrequency: recurrenceFrequencyEnum('recurrence_frequency'), // Frequency of recurrence (MONTHLY, YEARLY, WEEKLY, DAILY)
+	receiptImage: text('receipt_image'), // Optional receipt image stored as base64 data URL
 	clerkUserId: text('clerk_user_id').notNull(), // Clerk user ID
 })
 

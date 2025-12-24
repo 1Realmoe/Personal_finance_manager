@@ -12,22 +12,26 @@ interface TransactionsTableWrapperProps {
 		date: Date | string
 		accountName: string | null
 		categoryName?: string | null
-		type: 'INCOME' | 'EXPENSE'
+		type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 		accountId: string
+		toAccountId?: string | null
 		categoryId?: string | null
 		currency?: string
-		source?: string | null
+		sourceId?: string | null
+		sourceName?: string | null
 		isRecurrent?: boolean
 		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
 	}>
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
+	sources?: Array<{ id: string; name: string; icon: string }>
 }
 
 export function TransactionsTableWrapper({
 	transactions,
 	accounts,
 	categories,
+	sources = [],
 }: TransactionsTableWrapperProps) {
 	const [filters, setFilters] = useState<TransactionFilters>({
 		searchQuery: '',
@@ -51,6 +55,7 @@ export function TransactionsTableWrapper({
 				transactions={transactions}
 				accounts={accounts}
 				categories={categories}
+				sources={sources}
 				filters={filters}
 			/>
 		</div>

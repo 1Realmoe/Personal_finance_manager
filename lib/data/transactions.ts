@@ -1,10 +1,11 @@
 import { db } from '@/db'
-import { transactions, accounts, categories } from '@/db/schema'
-import { eq, desc, and, gte, lte } from 'drizzle-orm'
+import { transactions, accounts, categories, sources } from '@/db/schema'
+import { eq, desc, and, gte, lte, inArray } from 'drizzle-orm'
 import { getCurrentUserId } from '@/lib/auth-helpers'
 
 export async function getTransactions(limit?: number) {
 	const clerkUserId = await getCurrentUserId()
+	
 	const results = await db
 		.select({
 			id: transactions.id,
@@ -14,12 +15,15 @@ export async function getTransactions(limit?: number) {
 			type: transactions.type,
 			accountId: transactions.accountId,
 			accountName: accounts.name,
+			toAccountId: transactions.toAccountId,
 			categoryId: transactions.categoryId,
 			categoryName: categories.name,
 			currency: transactions.currency,
-			source: transactions.source,
+			sourceId: transactions.sourceId,
+			sourceName: sources.name,
 			isRecurrent: transactions.isRecurrent,
 			recurrenceFrequency: transactions.recurrenceFrequency,
+			receiptImage: transactions.receiptImage,
 		})
 		.from(transactions)
 		.leftJoin(accounts, and(
@@ -30,11 +34,44 @@ export async function getTransactions(limit?: number) {
 			eq(transactions.categoryId, categories.id),
 			eq(categories.clerkUserId, clerkUserId)
 		))
+		.leftJoin(sources, and(
+			eq(transactions.sourceId, sources.id),
+			eq(sources.clerkUserId, clerkUserId)
+		))
 		.where(eq(transactions.clerkUserId, clerkUserId))
 		.orderBy(desc(transactions.date))
 		.limit(limit || 100)
 
-	return results
+	// Fetch toAccount names for transfers
+	const toAccountIds = results
+		.map((r) => r.toAccountId)
+		.filter((id): id is string => id !== null && id !== undefined)
+	
+	const toAccountNamesMap = new Map<string, string>()
+	if (toAccountIds.length > 0) {
+		const toAccounts = await db
+			.select({
+				id: accounts.id,
+				name: accounts.name,
+			})
+			.from(accounts)
+			.where(
+				and(
+					inArray(accounts.id, toAccountIds),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
+		
+		toAccounts.forEach((account) => {
+			toAccountNamesMap.set(account.id, account.name)
+		})
+	}
+
+	// Add toAccountName to results
+	return results.map((result) => ({
+		...result,
+		toAccountName: result.toAccountId ? toAccountNamesMap.get(result.toAccountId) || null : null,
+	}))
 }
 
 export async function getRecentTransactions(count: number = 5) {
@@ -55,12 +92,15 @@ export async function getTransactionsByMonth(year: number, month: number) {
 			type: transactions.type,
 			accountId: transactions.accountId,
 			accountName: accounts.name,
+			toAccountId: transactions.toAccountId,
 			categoryId: transactions.categoryId,
 			categoryName: categories.name,
 			currency: transactions.currency,
-			source: transactions.source,
+			sourceId: transactions.sourceId,
+			sourceName: sources.name,
 			isRecurrent: transactions.isRecurrent,
 			recurrenceFrequency: transactions.recurrenceFrequency,
+			receiptImage: transactions.receiptImage,
 		})
 		.from(transactions)
 		.leftJoin(accounts, and(
@@ -71,6 +111,10 @@ export async function getTransactionsByMonth(year: number, month: number) {
 			eq(transactions.categoryId, categories.id),
 			eq(categories.clerkUserId, clerkUserId)
 		))
+		.leftJoin(sources, and(
+			eq(transactions.sourceId, sources.id),
+			eq(sources.clerkUserId, clerkUserId)
+		))
 		.where(
 			and(
 				eq(transactions.clerkUserId, clerkUserId),
@@ -80,6 +124,35 @@ export async function getTransactionsByMonth(year: number, month: number) {
 		)
 		.orderBy(desc(transactions.date))
 
-	return results
+	// Fetch toAccount names for transfers
+	const toAccountIds = results
+		.map((r) => r.toAccountId)
+		.filter((id): id is string => id !== null && id !== undefined)
+	
+	const toAccountNamesMap = new Map<string, string>()
+	if (toAccountIds.length > 0) {
+		const toAccounts = await db
+			.select({
+				id: accounts.id,
+				name: accounts.name,
+			})
+			.from(accounts)
+			.where(
+				and(
+					inArray(accounts.id, toAccountIds),
+					eq(accounts.clerkUserId, clerkUserId)
+				)
+			)
+		
+		toAccounts.forEach((account) => {
+			toAccountNamesMap.set(account.id, account.name)
+		})
+	}
+
+	// Add toAccountName to results
+	return results.map((result) => ({
+		...result,
+		toAccountName: result.toAccountId ? toAccountNamesMap.get(result.toAccountId) || null : null,
+	}))
 }
 

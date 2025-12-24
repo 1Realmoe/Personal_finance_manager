@@ -32,7 +32,7 @@ export interface TransactionFilters {
 	dateTo: Date | null
 	accountIds: string[]
 	categoryIds: string[]
-	type: 'INCOME' | 'EXPENSE' | 'ALL'
+	type: 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'ALL'
 	amountMin: string
 	amountMax: string
 }
@@ -47,7 +47,7 @@ export function TransactionsSearchFilters({
 	const [dateTo, setDateTo] = useState<Date | null>(null)
 	const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
 	const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-	const [type, setType] = useState<'INCOME' | 'EXPENSE' | 'ALL'>('ALL')
+	const [type, setType] = useState<'INCOME' | 'EXPENSE' | 'TRANSFER' | 'ALL'>('ALL')
 	const [amountMin, setAmountMin] = useState('')
 	const [amountMax, setAmountMax] = useState('')
 	const [showFilters, setShowFilters] = useState(false)
@@ -204,7 +204,7 @@ export function TransactionsSearchFilters({
 						{/* Type */}
 						<div>
 							<label className="text-sm font-medium">Type</label>
-							<Select value={type} onValueChange={(value: 'INCOME' | 'EXPENSE' | 'ALL') => setType(value)}>
+							<Select value={type} onValueChange={(value: 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'ALL') => setType(value)}>
 								<SelectTrigger>
 									<SelectValue />
 								</SelectTrigger>
@@ -212,6 +212,7 @@ export function TransactionsSearchFilters({
 									<SelectItem value="ALL">All</SelectItem>
 									<SelectItem value="INCOME">Income</SelectItem>
 									<SelectItem value="EXPENSE">Expense</SelectItem>
+									<SelectItem value="TRANSFER">Transfer</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>

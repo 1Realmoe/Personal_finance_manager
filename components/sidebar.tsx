@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Wallet, Receipt, Tag, Target, Settings, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, Wallet, Receipt, Tag, Target, Settings, TrendingUp, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BalanceToggle } from '@/components/features/balance-toggle'
 import { UserButton } from '@clerk/nextjs'
@@ -27,6 +27,11 @@ const navigation = [
 		name: 'Categories',
 		href: '/dashboard/categories',
 		icon: Tag,
+	},
+	{
+		name: 'Sources',
+		href: '/dashboard/sources',
+		icon: Briefcase,
 	},
 	{
 		name: 'Goals',

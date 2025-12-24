@@ -22,21 +22,26 @@ interface TransactionsTableClientProps {
 		description: string
 		date: Date | string
 		accountName: string | null
+		toAccountName?: string | null
 		categoryName?: string | null
-		type: 'INCOME' | 'EXPENSE'
+		type: 'INCOME' | 'EXPENSE' | 'TRANSFER'
 		accountId: string
+		toAccountId?: string | null
 		categoryId?: string | null
 		currency?: string
-		source?: string | null
+		sourceId?: string | null
+		sourceName?: string | null
 		isRecurrent?: boolean
 		recurrenceFrequency?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY' | null
+		receiptImage?: string | null
 	}>
 	accounts: Array<{ id: string; name: string; currency?: string }>
 	categories: Array<{ id: string; name: string }>
+	sources?: Array<{ id: string; name: string; icon: string }>
 	filters: TransactionFilters
 }
 
-export function TransactionsTableClient({ transactions, accounts, categories, filters }: TransactionsTableClientProps) {
+export function TransactionsTableClient({ transactions, accounts, categories, sources = [], filters }: TransactionsTableClientProps) {
 	const [selectedTransaction, setSelectedTransaction] = useState<typeof transactions[0] | null>(null)
 	const [detailsOpen, setDetailsOpen] = useState(false)
 
@@ -200,6 +205,8 @@ export function TransactionsTableClient({ transactions, accounts, categories, fi
 										className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
 											transaction.type === 'INCOME'
 												? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+												: transaction.type === 'TRANSFER'
+												? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
 												: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
 										}`}
 									>
@@ -207,7 +214,13 @@ export function TransactionsTableClient({ transactions, accounts, categories, fi
 									</span>
 								</TableCell>
 								<TableCell className="text-muted-foreground">
-									{transaction.source || <span className="text-muted-foreground">—</span>}
+									{transaction.type === 'TRANSFER' ? (
+										<span className="text-sm">
+											{transaction.accountName || '—'} → {transaction.toAccountName || '—'}
+										</span>
+									) : (
+										transaction.sourceName || <span className="text-muted-foreground">—</span>
+									)}
 								</TableCell>
 								<TableCell className="text-right">
 									<TransactionAmount
@@ -226,15 +239,18 @@ export function TransactionsTableClient({ transactions, accounts, categories, fi
 												description: transaction.description,
 												date: transaction.date,
 												accountId: transaction.accountId,
+												toAccountId: transaction.toAccountId || null,
 												categoryId: transaction.categoryId,
 												type: transaction.type,
 												currency: transaction.currency,
-												source: transaction.source || null,
+												sourceId: transaction.sourceId || null,
 												isRecurrent: transaction.isRecurrent || false,
 												recurrenceFrequency: transaction.recurrenceFrequency || null,
+												receiptImage: transaction.receiptImage || null,
 											}}
 											accounts={accounts}
 											categories={categories}
+											sources={sources}
 										/>
 									</div>
 								</TableCell>
@@ -250,6 +266,7 @@ export function TransactionsTableClient({ transactions, accounts, categories, fi
 					transaction={{
 						...selectedTransaction,
 						accountName: selectedTransaction.accountName || null,
+						toAccountName: selectedTransaction.toAccountName || null,
 					}}
 					open={detailsOpen}
 					onOpenChange={setDetailsOpen}
