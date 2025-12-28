@@ -152,9 +152,9 @@ export function PeriodPicker() {
 	const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
 			<Select value={viewMode} onValueChange={handleViewModeChange}>
-				<SelectTrigger className="w-[100px] h-9">
+				<SelectTrigger className="w-[90px] sm:w-[100px] h-9 text-xs sm:text-sm">
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>
@@ -167,7 +167,7 @@ export function PeriodPicker() {
 				variant="outline"
 				size="icon"
 				onClick={handlePreviousPeriod}
-				className="h-9 w-9"
+				className="h-9 w-9 shrink-0"
 			>
 				<ChevronLeft className="h-4 w-4" />
 			</Button>
@@ -179,12 +179,12 @@ export function PeriodPicker() {
 							variant="outline"
 							data-empty={!selectedDate}
 							className={cn(
-								'w-[200px] justify-start text-left font-normal',
+								'w-[140px] sm:w-[200px] justify-start text-left font-normal text-xs sm:text-sm',
 								'data-[empty=true]:text-muted-foreground'
 							)}
 						>
-							<CalendarIcon className="mr-2 h-4 w-4" />
-							{formatDateMonthYear(selectedDate)}
+							<CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+							<span className="truncate">{formatDateMonthYear(selectedDate)}</span>
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -201,9 +201,9 @@ export function PeriodPicker() {
 					<PopoverTrigger asChild>
 						<Button
 							variant="outline"
-							className="w-[120px] justify-start text-left font-normal"
+							className="w-[100px] sm:w-[120px] justify-start text-left font-normal text-xs sm:text-sm"
 						>
-							<CalendarIcon className="mr-2 h-4 w-4" />
+							<CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
 							{currentYear}
 						</Button>
 					</PopoverTrigger>
@@ -229,7 +229,7 @@ export function PeriodPicker() {
 				variant="outline"
 				size="icon"
 				onClick={handleNextPeriod}
-				className="h-9 w-9"
+				className="h-9 w-9 shrink-0"
 			>
 				<ChevronRight className="h-4 w-4" />
 			</Button>
@@ -238,7 +238,7 @@ export function PeriodPicker() {
 				variant="ghost"
 				size="sm"
 				onClick={handleCurrentPeriod}
-				className="h-9"
+				className="h-9 text-xs sm:text-sm"
 			>
 				{viewMode === 'year' ? 'This Year' : 'Today'}
 			</Button>

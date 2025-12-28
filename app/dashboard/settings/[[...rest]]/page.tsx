@@ -5,10 +5,10 @@ import { DeleteAccountButton } from '@/components/features/delete-account-button
 
 export default async function SettingsPage() {
 	return (
-		<div className="p-8 space-y-8">
+		<div className="p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 lg:pt-8 space-y-6 sm:space-y-8">
 			<div>
-				<h1 className="text-3xl font-bold mb-2">Settings</h1>
-				<p className="text-muted-foreground">Manage your account and preferences</p>
+				<h1 className="text-2xl sm:text-3xl font-bold mb-2">Settings</h1>
+				<p className="text-sm sm:text-base text-muted-foreground">Manage your account and preferences</p>
 			</div>
 
 			<div className="grid gap-8 lg:grid-cols-2">

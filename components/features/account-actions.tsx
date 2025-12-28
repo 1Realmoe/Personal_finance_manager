@@ -39,18 +39,34 @@ export function AccountActions({ account, defaultAccountType }: AccountActionsPr
 	const [editOpen, setEditOpen] = useState(false)
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [addOpen, setAddOpen] = useState(false)
+	const [isDeleting, setIsDeleting] = useState(false)
 	const router = useRouter()
 
 	const handleDelete = async () => {
 		if (!account) return
 
-		const result = await deleteAccount(account.id)
-		if (result.success) {
-			toast.success('Account deleted successfully')
-			setDeleteOpen(false)
-			router.refresh()
-		} else {
-			toast.error(result.error || 'Failed to delete account')
+		setIsDeleting(true)
+		try {
+			const result = await deleteAccount(account.id)
+			
+			if (result?.success) {
+				toast.success('Account deleted successfully')
+				setDeleteOpen(false)
+				router.refresh()
+			} else {
+				const errorMessage = result?.error || 'Failed to delete account'
+				toast.error(errorMessage, {
+					duration: 5000,
+				})
+			}
+		} catch (error) {
+			console.error('Error deleting account:', error)
+			const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred while deleting the account'
+			toast.error(errorMessage, {
+				duration: 5000,
+			})
+		} finally {
+			setIsDeleting(false)
 		}
 	}
 
@@ -134,7 +150,11 @@ export function AccountActions({ account, defaultAccountType }: AccountActionsPr
 				</DialogContent>
 			</Dialog>
 
-			<Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+			<Dialog open={deleteOpen} onOpenChange={(open) => {
+				if (!isDeleting) {
+					setDeleteOpen(open)
+				}
+			}}>
 				<DialogContent className="sm:max-w-lg">
 					<DialogHeader className="space-y-3 pb-6 border-b">
 						<DialogTitle className="text-2xl font-semibold">Delete Account</DialogTitle>
@@ -147,6 +167,7 @@ export function AccountActions({ account, defaultAccountType }: AccountActionsPr
 						<Button 
 							variant="outline" 
 							onClick={() => setDeleteOpen(false)}
+							disabled={isDeleting}
 							className="h-10"
 						>
 							Cancel
@@ -154,9 +175,10 @@ export function AccountActions({ account, defaultAccountType }: AccountActionsPr
 						<Button 
 							variant="destructive" 
 							onClick={handleDelete}
+							disabled={isDeleting}
 							className="h-10 shadow-sm hover:shadow-md transition-all duration-200"
 						>
-							Delete
+							{isDeleting ? 'Deleting...' : 'Delete'}
 						</Button>
 					</div>
 				</DialogContent>

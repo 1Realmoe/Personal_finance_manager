@@ -10,6 +10,7 @@ interface CategoryBreakdownChartProps {
 	data: Array<{ categoryName: string; total: number; currency: string }>
 	categoriesCount?: number
 	displayCurrency?: string
+	view?: 'month' | 'year'
 }
 
 const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#6366F1']
@@ -21,7 +22,7 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency }: CategoryBreakdownChartProps) {
+export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency, view = 'month' }: CategoryBreakdownChartProps) {
 	const { isBalanceVisible } = useBalanceVisibility()
 	
 	if (data.length === 0) {
@@ -31,7 +32,9 @@ export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency 
 					<div className="flex items-center justify-between">
 						<div>
 							<CardTitle>Category Breakdown</CardTitle>
-							<CardDescription>Top spending categories this month</CardDescription>
+							<CardDescription>
+								{view === 'year' ? 'Top spending categories this year' : 'Top spending categories this month'}
+							</CardDescription>
 						</div>
 						{categoriesCount !== undefined && (
 							<div className="text-right">
@@ -60,7 +63,7 @@ export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency 
 						</div>
 						<h3 className="text-lg font-semibold mb-2">No category data</h3>
 						<p className="text-sm text-muted-foreground">
-							No expense data available for this month
+							No expense data available for {view === 'year' ? 'this year' : 'this month'}
 						</p>
 					</div>
 				</CardContent>
@@ -68,10 +71,13 @@ export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency 
 		)
 	}
 
+	const total = data.reduce((sum, item) => sum + item.total, 0)
+	
 	const chartData = data.map((item, index) => ({
 		name: item.categoryName,
 		value: item.total,
 		color: COLORS[index % COLORS.length],
+		percent: (item.total / total) * 100,
 	}))
 
 	const currency = displayCurrency || data[0]?.currency || DEFAULT_CURRENCY
@@ -87,49 +93,77 @@ export function CategoryBreakdownChart({ data, categoriesCount, displayCurrency 
 				<div className="flex items-center justify-between">
 					<div>
 						<CardTitle>Category Breakdown</CardTitle>
-						<CardDescription>Top spending categories this month</CardDescription>
+						<CardDescription>
+							{view === 'year' ? 'Top spending categories this year' : 'Top spending categories this month'}
+						</CardDescription>
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent>
-				<ChartContainer config={chartConfig} className="h-[300px] w-full">
-					<PieChart>
-						<Pie
-							data={chartData}
-							cx="50%"
-							cy="50%"
-							labelLine={false}
-							label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-							outerRadius={80}
-							fill="#8884d8"
-							dataKey="value"
-							nameKey="name"
-						>
-							{chartData.map((entry, index) => (
-								<Cell key={`cell-${index}`} fill={entry.color} />
-							))}
-						</Pie>
-						<ChartTooltip
-							content={({ active, payload }) => {
-								if (active && payload && payload.length) {
-									return (
-										<div className="rounded-lg border bg-background p-2 shadow-sm">
-											<div className="grid gap-2">
-												<div className="flex items-center justify-between gap-4">
-													<span className="text-sm font-medium">{payload[0].name}</span>
-													<span className="text-sm font-bold">
-														{formatAmount(payload[0].value as number)}
-													</span>
+			<CardContent className="flex flex-col">
+				<div className="flex-1 min-h-0 pb-4">
+					<ChartContainer config={chartConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+						<PieChart>
+							<Pie
+								data={chartData}
+								cx="50%"
+								cy="50%"
+								labelLine={false}
+								label={false}
+								outerRadius="70%"
+								fill="#8884d8"
+								dataKey="value"
+								nameKey="name"
+							>
+								{chartData.map((entry, index) => (
+									<Cell key={`cell-${index}`} fill={entry.color} />
+								))}
+							</Pie>
+							<ChartTooltip
+								content={({ active, payload }) => {
+									if (active && payload && payload.length) {
+										return (
+											<div className="rounded-lg border bg-background p-2 shadow-sm">
+												<div className="grid gap-2">
+													<div className="flex items-center justify-between gap-4">
+														<span className="text-xs sm:text-sm font-medium">{payload[0].name}</span>
+														<span className="text-xs sm:text-sm font-bold">
+															{formatAmount(payload[0].value as number)}
+														</span>
+													</div>
 												</div>
 											</div>
-										</div>
-									)
-								}
-								return null
-							}}
-						/>
-					</PieChart>
-				</ChartContainer>
+										)
+									}
+									return null
+								}}
+							/>
+						</PieChart>
+					</ChartContainer>
+				</div>
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t flex-shrink-0">
+					{chartData.map((entry, index) => (
+						<div
+							key={`legend-${index}`}
+							className="flex items-center justify-between gap-2 px-1 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
+						>
+							<div className="flex items-center gap-2 min-w-0 flex-1">
+								<div
+									className="h-2.5 w-2.5 shrink-0 rounded-full"
+									style={{ backgroundColor: entry.color }}
+								/>
+								<span className="text-xs font-medium truncate">{entry.name}</span>
+							</div>
+							<div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+								<span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+									{entry.percent.toFixed(1)}%
+								</span>
+								<span className="text-xs font-semibold tabular-nums whitespace-nowrap">
+									{formatAmount(entry.value)}
+								</span>
+							</div>
+						</div>
+					))}
+				</div>
 			</CardContent>
 		</Card>
 	)

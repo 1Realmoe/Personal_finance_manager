@@ -152,17 +152,24 @@ export async function deleteAccount(accountId: string) {
 			return { success: false, error: 'Account not found' }
 		}
 
-		// Check if account has transactions (regular or investment)
+		// Check if account has transactions (as source account)
 		const accountTransactions = await db
 			.select()
 			.from(transactions)
 			.where(eq(transactions.accountId, accountId))
 			.limit(1)
 
-		if (accountTransactions.length > 0) {
+		// Check if account is used as destination in transfers
+		const transferTransactions = await db
+			.select()
+			.from(transactions)
+			.where(eq(transactions.toAccountId, accountId))
+			.limit(1)
+
+		if (accountTransactions.length > 0 || transferTransactions.length > 0) {
 			return {
 				success: false,
-				error: 'Cannot delete account with existing transactions',
+				error: 'Cannot delete account with existing transactions. Please delete or reassign all transactions first.',
 			}
 		}
 

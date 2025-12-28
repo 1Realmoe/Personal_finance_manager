@@ -289,15 +289,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 	)
 
 	return (
-		<div className="p-8 space-y-8">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-					<p className="text-muted-foreground">
+		<div className="p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 lg:pt-8 space-y-6 sm:space-y-8">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div className="lg:ml-0">
+					<h1 className="text-2xl sm:text-3xl font-bold mb-2">Dashboard</h1>
+					<p className="text-sm sm:text-base text-muted-foreground">
 						Overview of your finances
 					</p>
 				</div>
-				<Suspense fallback={<div className="h-9 w-[340px] bg-muted rounded animate-pulse" />}>
+				<Suspense fallback={<div className="h-9 w-full sm:w-[340px] bg-muted rounded animate-pulse" />}>
 					<PeriodPicker />
 				</Suspense>
 			</div>
@@ -481,7 +481,7 @@ async function CategoryBreakdownChartWrapper({
 			: getTopExpensesByCategory(year, month),
 		getOverviewStats(),
 	])
-	return <CategoryBreakdownChart data={categoryData} categoriesCount={stats.categories} displayCurrency={baseCurrency} />
+	return <CategoryBreakdownChart data={categoryData} categoriesCount={stats.categories} displayCurrency={baseCurrency} view={view} />
 }
 
 async function FrequentExpensesList({ 

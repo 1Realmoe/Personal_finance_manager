@@ -55,7 +55,7 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<ChartContainer config={chartConfig} className="h-[250px] w-full">
+					<ChartContainer config={chartConfig} className="h-[200px] sm:h-[220px] lg:h-[250px] w-full">
 						<BarChart data={data}>
 							<CartesianGrid strokeDasharray="3 3" className="stroke-muted opacity-50" />
 							<XAxis
@@ -133,11 +133,11 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 							/>
 						</BarChart>
 					</ChartContainer>
-					<div className="flex items-center justify-between pt-4 border-t">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 pt-4 border-t">
 						<div>
-							<p className="text-sm text-muted-foreground">Net Amount</p>
+							<p className="text-xs sm:text-sm text-muted-foreground">Net Amount</p>
 							<p
-								className={`text-2xl font-bold ${
+								className={`text-xl sm:text-2xl font-bold ${
 									netAmount >= 0
 										? 'text-green-600 dark:text-green-400'
 										: 'text-red-600 dark:text-red-400'
@@ -146,9 +146,9 @@ export function IncomeExpenseChart({ income, expense, currency = DEFAULT_CURRENC
 								{formatAmount(Math.abs(netAmount))}
 							</p>
 						</div>
-						<div className="text-right">
-							<p className="text-sm text-muted-foreground">Savings Rate</p>
-							<p className="text-2xl font-bold">
+						<div className="text-left sm:text-right">
+							<p className="text-xs sm:text-sm text-muted-foreground">Savings Rate</p>
+							<p className="text-xl sm:text-2xl font-bold">
 								{!isBalanceVisible 
 									? '•••'
 									: income > 0 

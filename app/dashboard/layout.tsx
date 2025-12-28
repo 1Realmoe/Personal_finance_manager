@@ -12,7 +12,7 @@ export default function DashboardLayout({
 			<CurrencyProvider>
 				<div className="flex h-screen overflow-hidden bg-background">
 					<Sidebar />
-					<main className="flex-1 overflow-y-auto bg-background">
+					<main className="flex-1 overflow-y-auto bg-background lg:ml-0">
 						<div className="min-h-full">
 							{children}
 						</div>

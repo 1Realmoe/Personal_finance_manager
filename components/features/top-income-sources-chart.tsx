@@ -75,7 +75,7 @@ export function TopIncomeSourcesChart({ data, displayCurrency }: TopIncomeSource
 			</CardHeader>
 			<CardContent>
 				<ChartContainer config={chartConfig} className="h-[400px] w-full">
-					<BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20, top: 20, bottom: 20 }}>
+					<BarChart data={chartData} layout="vertical">
 						<CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
 						<XAxis 
 							type="number" 
@@ -88,7 +88,7 @@ export function TopIncomeSourcesChart({ data, displayCurrency }: TopIncomeSource
 						<YAxis 
 							dataKey="name" 
 							type="category" 
-							width={120}
+							width={100}
 							className="text-xs"
 							tick={{ fontSize: 12 }}
 						/>

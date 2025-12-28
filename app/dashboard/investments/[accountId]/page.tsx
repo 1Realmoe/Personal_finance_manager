@@ -30,7 +30,7 @@ async function InvestmentAccountDetail({ accountId }: { accountId: string }) {
 	return (
 		<div className="space-y-8">
 			{/* Account Header */}
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div className="flex items-center gap-4">
 					<Link href="/dashboard/investments">
 						<Button variant="ghost" size="icon">
@@ -38,8 +38,8 @@ async function InvestmentAccountDetail({ accountId }: { accountId: string }) {
 						</Button>
 					</Link>
 					<div>
-						<h1 className="text-3xl font-bold">{account.name}</h1>
-						<p className="text-muted-foreground capitalize">{account.type.toLowerCase()}</p>
+						<h1 className="text-2xl sm:text-3xl font-bold">{account.name}</h1>
+						<p className="text-sm sm:text-base text-muted-foreground capitalize">{account.type.toLowerCase()}</p>
 					</div>
 				</div>
 			</div>
@@ -101,7 +101,7 @@ export default async function InvestmentAccountPage({
 	const { accountId } = await params
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 lg:pt-8">
 			<Suspense
 				fallback={
 					<div className="space-y-8">

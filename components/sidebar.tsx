@@ -1,11 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Wallet, Receipt, Tag, Target, Settings, TrendingUp, Briefcase } from 'lucide-react'
+import { LayoutDashboard, Wallet, Receipt, Tag, Target, Settings, TrendingUp, Briefcase, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BalanceToggle } from '@/components/features/balance-toggle'
 import { UserButton } from '@clerk/nextjs'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
 
 const navigation = [
 	{
@@ -51,8 +54,10 @@ const navigation = [
 ]
 
 export function Sidebar() {
-	return (
-		<div className="flex h-full w-64 flex-col border-r bg-card/50 backdrop-blur-sm">
+	const [open, setOpen] = useState(false)
+
+	const sidebarContent = (
+		<>
 			<div className="flex h-16 items-center border-b px-6 bg-card/80">
 				<h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
 					FinTrack
@@ -65,7 +70,7 @@ export function Sidebar() {
 				{navigation.map((item) => {
 					const Icon = item.icon
 					return (
-						<SidebarLink key={item.href} href={item.href}>
+						<SidebarLink key={item.href} href={item.href} onClick={() => setOpen(false)}>
 							<Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
 							{item.name}
 						</SidebarLink>
@@ -77,16 +82,47 @@ export function Sidebar() {
 					<UserButton />
 				</div>
 			</div>
-		</div>
+		</>
+	)
+
+	return (
+		<>
+			{/* Desktop Sidebar */}
+			<aside className="hidden lg:flex h-full w-64 flex-col border-r bg-card/50 backdrop-blur-sm">
+				{sidebarContent}
+			</aside>
+
+			{/* Mobile Sidebar */}
+			<Sheet open={open} onOpenChange={setOpen}>
+				<SheetTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="lg:hidden fixed top-4 left-4 z-50 h-10 w-10 bg-card border"
+					>
+						<Menu className="h-5 w-5" />
+						<span className="sr-only">Open menu</span>
+					</Button>
+				</SheetTrigger>
+				<SheetContent side="left" className="w-64 p-0 bg-card/50 backdrop-blur-sm">
+					<SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+					<div className="flex h-full flex-col">
+						{sidebarContent}
+					</div>
+				</SheetContent>
+			</Sheet>
+		</>
 	)
 }
 
 function SidebarLink({
 	href,
 	children,
+	onClick,
 }: {
 	href: string
 	children: React.ReactNode
+	onClick?: () => void
 }) {
 	const pathname = usePathname()
 	const isActive = pathname === href
@@ -94,6 +130,7 @@ function SidebarLink({
 	return (
 		<Link
 			href={href}
+			onClick={onClick}
 			className={cn(
 				'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
 				isActive
