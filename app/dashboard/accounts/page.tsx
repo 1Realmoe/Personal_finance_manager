@@ -74,17 +74,31 @@ async function AccountsList() {
 						{hasCardImage && (
 							<div className="absolute inset-0 z-0">
 								<div className="relative w-full h-full">
-									<Image
-										src={account.cardImage!}
-										alt={`${account.name} card`}
-										fill
-										className="object-cover object-right"
-										style={{
-											maskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
-											WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
-										}}
-										priority={index < 3}
-									/>
+									{account.cardImage!.startsWith('data:') ? (
+										
+										<img
+											src={account.cardImage!}
+											alt={`${account.name} card`}
+											className="absolute inset-0 w-full h-full object-cover object-right"
+											style={{
+												maskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
+												WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
+											}}
+										/>
+									) : (
+										
+										<Image
+											src={account.cardImage!}
+											alt={`${account.name} card`}
+											fill
+											className="object-cover object-right"
+											style={{
+												maskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
+												WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 30%, black 60%, black 100%)',
+											}}
+											priority={index < 3}
+										/>
+									)}
 									{/* Additional fade overlay from left */}
 									<div 
 										className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"

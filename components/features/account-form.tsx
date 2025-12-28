@@ -138,9 +138,12 @@ export function AccountForm({
 	})
 
 	// Set uploaded image path if editing with existing custom image
+	// Handle both old file paths (/uploads/) and new base64 data URLs (data:)
 	useEffect(() => {
-		if (initialData?.cardImage && initialData.cardImage.startsWith('/uploads/')) {
-			setUploadedImagePath(initialData.cardImage)
+		if (initialData?.cardImage) {
+			if (initialData.cardImage.startsWith('/uploads/') || initialData.cardImage.startsWith('data:')) {
+				setUploadedImagePath(initialData.cardImage)
+			}
 		}
 	}, [initialData?.cardImage])
 
@@ -522,7 +525,12 @@ export function AccountForm({
 										<div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50">
 											<ImageIcon className="h-4 w-4 text-muted-foreground" />
 											<span className="text-sm flex-1 truncate">
-												{uploadedImagePath || field.value}
+												{(() => {
+													const imageValue = uploadedImagePath || field.value || ''
+													return imageValue.startsWith('data:') 
+														? 'Image uploaded' 
+														: imageValue
+												})()}
 											</span>
 											<Button
 												type="button"

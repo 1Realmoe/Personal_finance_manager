@@ -1,7 +1,5 @@
 'use server'
 
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUserId } from '@/lib/auth-helpers'
 import { FILE_SIZE_LIMITS } from '@/lib/constants'
@@ -64,32 +62,17 @@ export async function uploadCardImage(formData: FormData): Promise<{ success: bo
 			return { success: false, error: 'File size must be less than 5MB' }
 		}
 
-		// Generate unique filename
+		// Convert image to base64 data URL for storage in database
+		// This works on serverless platforms like Vercel where filesystem is read-only
 		const bytes = await file.arrayBuffer()
 		const buffer = Buffer.from(bytes)
-		
-		const timestamp = Date.now()
-		const extension = file.name.split('.').pop() || 'jpg'
-		const filename = `card-${timestamp}.${extension}`
-		const path = join(process.cwd(), 'public', 'uploads', filename)
+		const base64 = buffer.toString('base64')
+		const mimeType = file.type || 'image/jpeg'
+		const dataUrl = `data:${mimeType};base64,${base64}`
 
-		// Ensure uploads directory exists
-		const fs = await import('fs/promises')
-		const uploadsDir = join(process.cwd(), 'public', 'uploads')
-		try {
-			await fs.access(uploadsDir)
-		} catch {
-			await fs.mkdir(uploadsDir, { recursive: true })
-		}
+		revalidatePath('/dashboard/accounts')
 
-		// Write file
-		await writeFile(path, buffer)
-
-		const publicPath = `/uploads/${filename}`
-
-		revalidatePath('/accounts')
-
-		return { success: true, path: publicPath }
+		return { success: true, path: dataUrl }
 	} catch (error) {
 		console.error('Error uploading file:', error)
 		return { success: false, error: 'Failed to upload file' }
