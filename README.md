@@ -125,14 +125,30 @@ This is not just a UI wrapper; it features complex backend logic and database op
 
 ## 📸 Screenshots
 
-> **Note:** Add your actual screenshots to showcase your project. Consider adding:
-> - Dashboard overview
-> - Investment portfolio view
-> - Transaction management
-> - Multi-currency accounts
-> - Analytics charts
-
-<!-- Add your screenshots here when ready -->
+<div align="center">
+  <img src="public/screenshots/1.png" alt="Dashboard Overview" width="800" />
+  <p><em>Dashboard Overview</em></p>
+  
+  <img src="public/screenshots/2.png" alt="" width="800" />
+  
+  <img src="public/screenshots/3.png" alt="Transaction Management" width="800" />
+  <p><em>Transaction Management</em></p>
+  
+  <img src="public/screenshots/4.png" alt="Transaction Details" width="800" />
+  <p><em>Transaction Details</em></p>
+  
+  <img src="public/screenshots/5.png" alt="Accounts management" width="800" />
+  <p><em>Accounts management</em></p>
+  
+  <img src="public/screenshots/6.png" alt="Goals management" width="800" />
+  <p><em>Goals management</em></p>
+  
+  <img src="public/screenshots/7.png" alt="Investemnt Tracking" width="800" />
+  <p><em>Investemnt Tracking</em></p>
+  
+  <img src="public/screenshots/8.png" alt="Settings & Configuration" width="800" />
+  <p><em>Crypto account view</em></p>
+</div>
 
 ---
 
