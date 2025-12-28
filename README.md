@@ -16,6 +16,14 @@
    <div align="center">
      It handles <b>OCR Receipt Scanning</b>, <b>Investment Portfolios</b>, and <b>Real-Time Currency Conversion</b>.
    </div>
+
+   <br />
+
+   <div align="center">
+     <a href="https://moe-finance-manager.vercel.app/">
+       <img src="https://img.shields.io/badge/🌐_Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+     </a>
+   </div>
 </div>
 
 ## 📋 Table of Contents
@@ -39,6 +47,8 @@
 **FinTrack** is a comprehensive financial management platform designed to solve the complexity of tracking wealth across borders and asset classes. Unlike standard expense trackers, FinTrack supports **multi-currency accounts** (USD, EUR, GBP, SEK) with real-time conversion and includes a dedicated **investment portfolio manager** for stocks and crypto.
 
 It leverages **OCR technology (Tesseract.js)** to automate data entry from physical receipts and provides deep analytics through interactive visualizations.
+
+**🌐 Try it live:** [https://moe-finance-manager.vercel.app/](https://moe-finance-manager.vercel.app/)
 
 ---
 
@@ -212,6 +222,8 @@ For testing purposes, you can use the following demo account credentials:
 ### 🚀 Deployment
 
 This application is designed to be deployed on **Vercel** for optimal performance with Next.js.
+
+**🌐 Live Demo:** [https://moe-finance-manager.vercel.app/](https://moe-finance-manager.vercel.app/)
 
 **Quick Deploy:**
 1. Push your code to GitHub
