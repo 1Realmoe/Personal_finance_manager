@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AccountActions } from '@/components/features/account-actions'
 import { DEFAULT_CURRENCY } from '@/lib/currency'
-import { PortfolioValueDisplay } from '@/components/features/portfolio-value-display'
+import { PortfolioValueDisplay } from '@/components/features/balance-displays'
 
 interface InvestmentAccountCardProps {
 	account: {

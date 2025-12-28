@@ -3,11 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getAccounts } from '@/lib/data/accounts'
 import { getPortfolioValue } from '@/lib/data/investments'
 import { AccountActions } from '@/components/features/account-actions'
-import { AccountBalance, AdditionalCurrencyBalance } from '@/components/features/account-balance'
+import { AccountBalance, AdditionalCurrencyBalance, PortfolioValueDisplay } from '@/components/features/balance-displays'
 import { DEFAULT_CURRENCY } from '@/lib/format'
 import { getUserBaseCurrency } from '@/lib/actions/user'
 import Image from 'next/image'
-import { PortfolioValueDisplay } from '@/components/features/portfolio-value-display'
 
 async function AccountsList() {
 	const accounts = await getAccounts()

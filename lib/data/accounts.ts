@@ -1,11 +1,17 @@
 import { db } from '@/db'
 import { accounts, accountCurrencies } from '@/db/schema'
-import { eq, and, ne } from 'drizzle-orm'
+import { eq, and, ne, inArray } from 'drizzle-orm'
 import { CurrencyCode, DEFAULT_CURRENCY } from '@/lib/currency'
 import { convertAndSum } from '@/lib/exchange'
 import { getUserBaseCurrency } from '@/lib/actions/user'
 import { getCurrentUserId } from '@/lib/auth-helpers'
 
+/**
+ * Get all accounts for the current user
+ * Optimized to fetch additional currencies in a single query (avoids N+1 problem)
+ * @param excludeInvestmentAccounts - If true, excludes investment accounts from results
+ * @returns Array of accounts with their additional currencies
+ */
 export async function getAccounts(excludeInvestmentAccounts: boolean = false) {
 	const clerkUserId = await getCurrentUserId()
 	
@@ -18,30 +24,39 @@ export async function getAccounts(excludeInvestmentAccounts: boolean = false) {
 				: eq(accounts.clerkUserId, clerkUserId)
 		)
 
-	// Fetch additional currencies for each account
-	const accountsWithCurrencies = await Promise.all(
-		accountResults.map(async (account) => {
-			const additionalCurrencies = await db
-				.select()
-				.from(accountCurrencies)
-				.where(
-					and(
-						eq(accountCurrencies.accountId, account.id),
-						eq(accountCurrencies.clerkUserId, clerkUserId)
-					)
-				)
+	if (accountResults.length === 0) {
+		return []
+	}
 
-			return {
-				...account,
-				additionalCurrencies: additionalCurrencies.map((ac) => ({
-					currency: ac.currency,
-					balance: ac.balance,
-				})),
-			}
+	// Fetch all additional currencies for all accounts in a single query (optimized to avoid N+1)
+	const accountIds = accountResults.map(a => a.id)
+	const allAdditionalCurrencies = await db
+		.select()
+		.from(accountCurrencies)
+		.where(
+			and(
+				eq(accountCurrencies.clerkUserId, clerkUserId),
+				inArray(accountCurrencies.accountId, accountIds)
+			)
+		)
+
+	// Group currencies by accountId
+	const currenciesByAccount = new Map<string, Array<{ currency: string; balance: string }>>()
+	for (const ac of allAdditionalCurrencies) {
+		if (!currenciesByAccount.has(ac.accountId)) {
+			currenciesByAccount.set(ac.accountId, [])
+		}
+		currenciesByAccount.get(ac.accountId)!.push({
+			currency: ac.currency,
+			balance: ac.balance,
 		})
-	)
+	}
 
-	return accountsWithCurrencies
+	// Map accounts with their currencies
+	return accountResults.map(account => ({
+		...account,
+		additionalCurrencies: currenciesByAccount.get(account.id) || [],
+	}))
 }
 
 export async function getAccountBalance(accountId: string) {

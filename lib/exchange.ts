@@ -1,4 +1,5 @@
-import { CurrencyCode, DEFAULT_CURRENCY } from './currency'
+import { CurrencyCode } from './currency'
+import { EXCHANGE_RATE_CACHE_DURATION } from './constants'
 
 interface ExchangeRateResponse {
 	rates: Record<string, number>
@@ -20,7 +21,7 @@ async function fetchExchangeRate(from: CurrencyCode, to: CurrencyCode): Promise<
 
 	try {
 		const response = await fetch(url, {
-			next: { revalidate: 86400 }, // Cache for 24 hours
+			next: { revalidate: EXCHANGE_RATE_CACHE_DURATION },
 		})
 
 		if (!response.ok) {

@@ -1,7 +1,13 @@
 {
-  "name": "my-app",
+  "name": "fintrack",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "A smart, multi-currency personal finance manager with OCR receipt scanning and investment portfolio tracking",
+  "author": "1Realmoe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1Realmoe/FinTrack.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -33,7 +39,6 @@
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.562.0",
     "next": "16.1.0",
-    "openai": "^6.15.0",
     "pg": "^8.16.3",
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",

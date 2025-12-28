@@ -18,16 +18,14 @@ async function InvestmentsContent() {
 		getPortfolioPerformance(),
 	])
 
-	// Calculate portfolio value for each account
-	const accountsWithPortfolioValue = await Promise.all(
-		accounts.map(async (account) => {
-			const portfolioValue = await getPortfolioValue(account.id)
-			return {
-				...account,
-				portfolioValue,
-			}
-		})
-	)
+	// Calculate portfolio values for all accounts efficiently (optimized to avoid N+1 queries)
+	const { getPortfolioValuesForAccounts } = await import('@/lib/data/investments')
+	const portfolioValuesMap = await getPortfolioValuesForAccounts(accounts.map(a => a.id))
+	
+	const accountsWithPortfolioValue = accounts.map((account) => ({
+		...account,
+		portfolioValue: portfolioValuesMap.get(account.id) || 0,
+	}))
 
 	return (
 		<div className="space-y-8">

@@ -20,6 +20,7 @@ import { MoreVertical, Edit, Trash2, Plus } from 'lucide-react'
 import { AccountForm } from './account-form'
 import { createAccount, updateAccount, deleteAccount } from '@/lib/actions/account'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface AccountActionsProps {
 	account?: {
@@ -45,10 +46,11 @@ export function AccountActions({ account, defaultAccountType }: AccountActionsPr
 
 		const result = await deleteAccount(account.id)
 		if (result.success) {
+			toast.success('Account deleted successfully')
 			setDeleteOpen(false)
 			router.refresh()
 		} else {
-			alert(result.error || 'Failed to delete account')
+			toast.error(result.error || 'Failed to delete account')
 		}
 	}
 

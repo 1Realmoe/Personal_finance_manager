@@ -2,9 +2,9 @@
 
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Upload, X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FILE_SIZE_LIMITS } from '@/lib/constants'
 
 interface ReceiptData {
 	amount?: string
@@ -37,7 +37,7 @@ export function ReceiptScanner({ onScanComplete, onClose }: ReceiptScannerProps)
 		}
 
 		// Validate file size (max 10MB)
-		if (file.size > 10 * 1024 * 1024) {
+		if (file.size > FILE_SIZE_LIMITS.RECEIPT_SCANNER) {
 			setError('File size must be less than 10MB')
 			return
 		}

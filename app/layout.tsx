@@ -14,8 +14,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinTrack - Personal Finance Manager",
-  description: "Track your income and expenses",
+	title: {
+		default: 'FinTrack - Personal Finance Manager',
+		template: '%s | FinTrack',
+	},
+	description: 'A smart, multi-currency personal finance manager with OCR receipt scanning, investment portfolio tracking, and real-time currency conversion. Track your income, expenses, and financial goals all in one place.',
+	keywords: [
+		'personal finance',
+		'expense tracker',
+		'budget manager',
+		'investment tracker',
+		'multi-currency',
+		'financial management',
+		'receipt scanner',
+		'OCR',
+		'portfolio tracker',
+	],
+	authors: [{ name: '1Realmoe' }],
+	creator: '1Realmoe',
+	openGraph: {
+		type: 'website',
+		locale: 'en_US',
+		title: 'FinTrack - Personal Finance Manager',
+		description: 'A smart, multi-currency personal finance manager with OCR receipt scanning and investment portfolio tracking.',
+		siteName: 'FinTrack',
+	},
+	twitter: {
+		card: 'summary_large_image',
+		title: 'FinTrack - Personal Finance Manager',
+		description: 'A smart, multi-currency personal finance manager with OCR receipt scanning and investment portfolio tracking.',
+	},
+	robots: {
+		index: true,
+		follow: true,
+	},
 };
 
 export default function RootLayout({

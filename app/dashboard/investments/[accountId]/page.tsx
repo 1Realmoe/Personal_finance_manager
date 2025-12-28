@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { DEFAULT_CURRENCY } from '@/lib/currency'
 import { getUserBaseCurrency } from '@/lib/actions/user'
-import { PortfolioValueDisplay } from '@/components/features/portfolio-value-display'
+import { PortfolioValueDisplay } from '@/components/features/balance-displays'
 
 async function InvestmentAccountDetail({ accountId }: { accountId: string }) {
 	const [accounts, holdings, transactions, portfolioValue, baseCurrency] = await Promise.all([

@@ -15,6 +15,7 @@ import {
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { deleteAccount } from '@/lib/actions/settings'
+import { toast } from 'sonner'
 
 export function DeleteAccountButton() {
 	const [isDeleting, setIsDeleting] = useState(false)
@@ -27,7 +28,7 @@ export function DeleteAccountButton() {
 			router.push('/signin')
 		} catch (error) {
 			console.error('Error deleting account:', error)
-			alert('Failed to delete account. Please try again.')
+			toast.error('Failed to delete account. Please try again.')
 		} finally {
 			setIsDeleting(false)
 		}

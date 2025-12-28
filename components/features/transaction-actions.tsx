@@ -28,6 +28,7 @@ import {
 import { MoreVertical, Trash2, Edit } from 'lucide-react'
 import { deleteTransaction } from '@/lib/actions/transaction'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { TransactionForm } from './transaction-form'
 
 interface TransactionActionsProps {
@@ -69,13 +70,14 @@ export function TransactionActions({
 		try {
 			const result = await deleteTransaction(transactionId)
 			if (result.success) {
+				toast.success('Transaction deleted successfully')
 				setDeleteOpen(false)
 				router.refresh()
 			} else {
-				alert(result.error || 'Failed to delete transaction')
+				toast.error(result.error || 'Failed to delete transaction')
 			}
 		} catch (error) {
-			alert('An unexpected error occurred')
+			toast.error('An unexpected error occurred')
 		} finally {
 			setIsDeleting(false)
 		}

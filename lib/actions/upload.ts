@@ -4,6 +4,7 @@ import { writeFile } from 'fs/promises'
 import { join } from 'path'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUserId } from '@/lib/auth-helpers'
+import { FILE_SIZE_LIMITS } from '@/lib/constants'
 
 export async function uploadReceiptImage(formData: FormData): Promise<{ success: boolean; imageData?: string; error?: string }> {
 	try {
@@ -22,7 +23,7 @@ export async function uploadReceiptImage(formData: FormData): Promise<{ success:
 		}
 
 		// Validate file size (max 5MB for receipts - base64 increases size by ~33%)
-		if (file.size > 5 * 1024 * 1024) {
+		if (file.size > FILE_SIZE_LIMITS.RECEIPT_IMAGE) {
 			return { success: false, error: 'File size must be less than 5MB' }
 		}
 
@@ -59,7 +60,7 @@ export async function uploadCardImage(formData: FormData): Promise<{ success: bo
 		}
 
 		// Validate file size (max 5MB)
-		if (file.size > 5 * 1024 * 1024) {
+		if (file.size > FILE_SIZE_LIMITS.CARD_IMAGE) {
 			return { success: false, error: 'File size must be less than 5MB' }
 		}
 

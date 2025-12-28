@@ -26,7 +26,7 @@ import { CategoryBreakdownChart } from '@/components/features/category-breakdown
 import { IncomeExpenseChart } from '@/components/features/income-expense-chart'
 import { TopIncomeSourcesChart } from '@/components/features/top-income-sources-chart'
 import { PeriodPicker } from '@/components/ui/period-picker'
-import { DashboardBalance } from '@/components/features/dashboard-balance'
+import { DashboardBalance } from '@/components/features/balance-displays'
 import { TransactionAmount } from '@/components/features/transaction-amount'
 import { SavingsRateDisplay } from '@/components/features/savings-rate-display'
 import { Wallet, Tag, Target, Receipt, TrendingUp, TrendingDown, Repeat, Zap } from 'lucide-react'

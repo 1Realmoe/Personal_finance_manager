@@ -36,6 +36,7 @@ import { createSource } from '@/lib/actions/source'
 import { createCategory } from '@/lib/actions/category'
 import { uploadReceiptImage } from '@/lib/actions/upload'
 import * as LucideIcons from 'lucide-react'
+import { toast } from 'sonner'
 import {
 	Dialog,
 	DialogContent,
@@ -44,6 +45,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { ReceiptScanner } from './receipt-scanner'
+import { FILE_SIZE_LIMITS } from '@/lib/constants'
 
 const transactionSchema = z.object({
 	amount: z.string().min(0.01, 'Amount must be greater than 0'),
@@ -273,7 +275,7 @@ export function TransactionForm({
 		}
 
 		// Validate file size (max 10MB)
-		if (file.size > 10 * 1024 * 1024) {
+		if (file.size > FILE_SIZE_LIMITS.RECEIPT_SCANNER) {
 			form.setError('root', { message: 'File size must be less than 10MB' })
 			return
 		}
@@ -737,7 +739,7 @@ export function TransactionForm({
 												setNewSourceName('')
 												router.refresh()
 											} else {
-												alert(result.error || 'Failed to create source')
+												toast.error(result.error || 'Failed to create source')
 											}
 										} catch (error) {
 											console.error('Error creating source:', error)
@@ -802,7 +804,7 @@ export function TransactionForm({
 												setNewCategoryName('')
 												router.refresh()
 											} else {
-												alert(result.error || 'Failed to create category')
+												toast.error(result.error || 'Failed to create category')
 											}
 										} catch (error) {
 											console.error('Error creating category:', error)

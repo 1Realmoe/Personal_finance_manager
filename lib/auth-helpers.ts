@@ -79,10 +79,11 @@ export async function syncUserToDatabase(): Promise<void> {
 				avatar,
 				baseCurrency: 'USD', // Default currency
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Handle race condition - another request might have created the user
 			// Error code 23505 = unique_violation in PostgreSQL
-			if (error?.code === '23505' || error?.cause?.code === '23505' || error?.message?.includes('unique')) {
+			const errorObj = error as { code?: string; cause?: { code?: string }; message?: string }
+			if (errorObj?.code === '23505' || errorObj?.cause?.code === '23505' || errorObj?.message?.includes('unique')) {
 				// User was created by another request - update instead
 				await db
 					.update(users)
