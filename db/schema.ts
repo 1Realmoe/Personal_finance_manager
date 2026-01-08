@@ -52,6 +52,7 @@ export const transactions = pgTable('transactions', {
 	sourceId: uuid('source_id').references(() => sources.id, { onDelete: 'set null' }), // Optional source of income (e.g., YouTube, Affiliate, etc.)
 	isRecurrent: boolean('is_recurrent').notNull().default(false), // Whether this is a recurring transaction
 	recurrenceFrequency: recurrenceFrequencyEnum('recurrence_frequency'), // Frequency of recurrence (MONTHLY, YEARLY, WEEKLY, DAILY)
+	parentRecurringTransactionId: uuid('parent_recurring_transaction_id'), // Reference to the original recurring transaction template (self-reference, FK defined in migration)
 	receiptImage: text('receipt_image'), // Optional receipt image stored as base64 data URL
 	clerkUserId: text('clerk_user_id').notNull(), // Clerk user ID
 })

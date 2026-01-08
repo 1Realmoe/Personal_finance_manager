@@ -64,7 +64,7 @@ export default function LandingPage() {
 						</span>
 					</div>
 					<nav className="flex items-center gap-2">
-						<Link href="https://github.com/1Realmoe/FinTrack" target="_blank" rel="noopener noreferrer">
+						<Link href="https://github.com/1Realmoe/Personal_finance_manager" target="_blank" rel="noopener noreferrer">
 							<Button variant="ghost" size="sm" className="gap-2 h-9">
 								<Github className="h-4 w-4" />
 								<span className="hidden sm:inline text-xs">GitHub</span>
