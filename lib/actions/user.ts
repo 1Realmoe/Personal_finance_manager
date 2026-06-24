@@ -58,6 +58,7 @@ export async function updateUserBaseCurrency(currency: CurrencyCode): Promise<vo
 
 		// Revalidate dashboard and related pages
 		revalidatePath('/dashboard')
+		revalidatePath('/dashboard/settings')
 		revalidatePath('/accounts')
 		revalidatePath('/transactions')
 	} catch (error) {

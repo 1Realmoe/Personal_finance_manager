@@ -1,17 +1,34 @@
 import { UserProfile } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CurrencySelector } from '@/components/features/currency-selector'
 import { DeleteAccountButton } from '@/components/features/delete-account-button'
 
 export default async function SettingsPage() {
+	const user = await currentUser();
+	const isDemoUser = user?.emailAddresses[0]?.emailAddress === 'demo@demo.com';
+
 	return (
-		<div className="p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 lg:pt-8 space-y-6 sm:space-y-8">
-			<div>
+        <div className="p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 lg:pt-8 space-y-6 sm:space-y-8">
+			{isDemoUser && (
+				<style dangerouslySetInnerHTML={{ __html: `
+					.cl-navbarButton__security,
+					.cl-navbarMobileMenuRow__security,
+					.cl-accordionTriggerButton__security,
+					.cl-profilePage__security,
+					.cl-profileSection__password,
+					.cl-profileSectionPrimaryButton__password,
+					.cl-button__security,
+					.cl-button__password {
+						display: none !important;
+					}
+				`}} />
+			)}
+            <div>
 				<h1 className="text-2xl sm:text-3xl font-bold mb-2">Settings</h1>
 				<p className="text-sm sm:text-base text-muted-foreground">Manage your account and preferences</p>
 			</div>
-
-			<div className="grid gap-8 lg:grid-cols-2">
+            <div className="grid gap-8 lg:grid-cols-2">
 				<div className="lg:col-span-2">
 					<Card>
 						<CardHeader>
@@ -28,10 +45,10 @@ export default async function SettingsPage() {
 										variables: {
 											colorPrimary: 'hsl(var(--primary))',
 											colorBackground: 'hsl(var(--card))',
-											colorText: 'hsl(var(--foreground))',
-											colorInputBackground: 'hsl(var(--input))',
-											colorInputText: 'hsl(var(--foreground))',
-											colorTextSecondary: 'hsl(var(--muted-foreground))',
+											colorForeground: 'hsl(var(--foreground))',
+											colorInput: 'hsl(var(--input))',
+											colorInputForeground: 'hsl(var(--foreground))',
+											colorMutedForeground: 'hsl(var(--muted-foreground))',
 											colorShimmer: 'hsl(var(--muted))',
 											colorNeutral: 'hsl(var(--muted))',
 											colorDanger: 'hsl(var(--destructive))',
@@ -73,17 +90,26 @@ export default async function SettingsPage() {
 					</CardContent>
 				</Card>
 
-				<Card className="border-destructive">
-					<CardHeader>
-						<CardTitle className="text-destructive">Danger Zone</CardTitle>
-						<CardDescription>Irreversible and destructive actions</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<DeleteAccountButton />
-					</CardContent>
-				</Card>
+				{!isDemoUser ? (
+					<Card className="border-destructive">
+						<CardHeader>
+							<CardTitle className="text-destructive">Danger Zone</CardTitle>
+							<CardDescription>Irreversible and destructive actions</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<DeleteAccountButton />
+						</CardContent>
+					</Card>
+				) : (
+					<Card className="border-muted/50">
+						<CardHeader>
+							<CardTitle className="text-muted-foreground">Danger Zone</CardTitle>
+							<CardDescription>Actions are disabled for the demo account</CardDescription>
+						</CardHeader>
+					</Card>
+				)}
 			</div>
-		</div>
-	)
+        </div>
+    );
 }
 
